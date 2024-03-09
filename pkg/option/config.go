@@ -2416,6 +2416,7 @@ var (
 		BPFEventsDropEnabled:          defaults.BPFEventsDropEnabled,
 		BPFEventsPolicyVerdictEnabled: defaults.BPFEventsPolicyVerdictEnabled,
 		BPFEventsTraceEnabled:         defaults.BPFEventsTraceEnabled,
+		EnableEnvoyConfig:             defaults.EnableEnvoyConfig,
 	}
 )
 
