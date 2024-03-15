@@ -432,8 +432,8 @@ func (l *loader) reloadHostDatapath(ctx context.Context, ep datapath.Endpoint, o
 	)
 	if err != nil {
 		scopedLog := ep.Logger(subsystem).WithFields(logrus.Fields{
-			logfields.Path: objPath,
-			logfields.Veth: ep.InterfaceName(),
+			logfields.Path:      objPath,
+			logfields.Interface: ep.InterfaceName(),
 		})
 		// Don't log an error here if the context was canceled or timed out;
 		// this log message should only represent failures with respect to
@@ -473,8 +473,8 @@ func (l *loader) reloadHostDatapath(ctx context.Context, ep datapath.Endpoint, o
 	)
 	if err != nil {
 		scopedLog := ep.Logger(subsystem).WithFields(logrus.Fields{
-			logfields.Path: objPath,
-			logfields.Veth: defaults.SecondHostDevice,
+			logfields.Path:      objPath,
+			logfields.Interface: defaults.SecondHostDevice,
 		})
 		if ctx.Err() == nil {
 			scopedLog.WithError(err).Warningf("JoinEP: Failed to load program for %s", defaults.SecondHostDevice)
@@ -528,8 +528,8 @@ func (l *loader) reloadHostDatapath(ctx context.Context, ep datapath.Endpoint, o
 		)
 		if err != nil {
 			scopedLog := ep.Logger(subsystem).WithFields(logrus.Fields{
-				logfields.Path: objPath,
-				logfields.Veth: device,
+				logfields.Path:      objPath,
+				logfields.Interface: device,
 			})
 			if ctx.Err() == nil {
 				scopedLog.WithError(err).Warningf("JoinEP: Failed to load program for physical device %s", device)
@@ -598,8 +598,8 @@ func (l *loader) reloadDatapath(ctx context.Context, ep datapath.Endpoint, dirs 
 		)
 		if err != nil {
 			scopedLog := ep.Logger(subsystem).WithFields(logrus.Fields{
-				logfields.Path: objPath,
-				logfields.Veth: device,
+				logfields.Path:      objPath,
+				logfields.Interface: device,
 			})
 			// Don't log an error here if the context was canceled or timed out;
 			// this log message should only represent failures with respect to
@@ -614,7 +614,7 @@ func (l *loader) reloadDatapath(ctx context.Context, ep datapath.Endpoint, dirs 
 
 	if ep.RequireEndpointRoute() {
 		scopedLog := ep.Logger(subsystem).WithFields(logrus.Fields{
-			logfields.Veth: device,
+			logfields.Interface: device,
 		})
 		if ip := ep.IPv4Address(); ip.IsValid() {
 			if err := upsertEndpointRoute(ep, *iputil.AddrToIPNet(ip)); err != nil {
