@@ -2777,6 +2777,7 @@ definitions:
     type: string
     enum:
       - veth
+      - netkit
   AttachMode:
     description: Core datapath attachment mode
     type: string
