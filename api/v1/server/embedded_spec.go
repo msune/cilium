@@ -2740,7 +2740,8 @@ func init() {
       "type": "string",
       "enum": [
         "veth",
-        "netkit"
+        "netkit",
+        "netkit-l2"
       ]
     },
     "DebugInfo": {
@@ -8567,7 +8568,8 @@ func init() {
       "type": "string",
       "enum": [
         "veth",
-        "netkit"
+        "netkit",
+        "netkit-l2"
       ]
     },
     "DebugInfo": {
