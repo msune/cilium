@@ -29,14 +29,14 @@ type GRPCRouteInput struct {
 	Logger    *logrus.Entry
 	Client    client.Client
 	Grants    *gatewayv1beta1.ReferenceGrantList
-	GRPCRoute *gatewayv1alpha2.GRPCRoute
+	GRPCRoute *gatewayv1.GRPCRoute
 
 	gateways map[gatewayv1.ParentReference]*gatewayv1.Gateway
 }
 
 // GRPCRouteRule is used to implement the GenericRule interface for GRPCRoute
 type GRPCRouteRule struct {
-	Rule gatewayv1alpha2.GRPCRouteRule
+	Rule gatewayv1.GRPCRouteRule
 }
 
 func (g *GRPCRouteRule) GetBackendRefs() []gatewayv1.BackendRef {
@@ -46,7 +46,7 @@ func (g *GRPCRouteRule) GetBackendRefs() []gatewayv1.BackendRef {
 	}
 
 	for _, f := range g.Rule.Filters {
-		if f.Type == gatewayv1alpha2.GRPCRouteFilterRequestMirror {
+		if f.Type == gatewayv1.GRPCRouteFilterRequestMirror {
 			if f.RequestMirror == nil {
 				continue
 			}
