@@ -34,8 +34,12 @@
 
 #define META_PIVOT		field_sizeof(struct __sk_buff, cb)
 
+#ifndef ctx_load_bytes
 #define ctx_load_bytes		skb_load_bytes
+#endif
+#ifndef ctx_store_bytes
 #define ctx_store_bytes		skb_store_bytes
+#endif
 
 #define ctx_adjust_hroom	skb_adjust_room
 
