@@ -19,6 +19,34 @@
 #include "../lib/conntrack.h"
 #include "endian.h"
 #include <string.h>
+#include <assert.h>
+
+static int ev_cb_err_cnt = 0;
+static int ev_cb_iterations = 0;
+static __u32 ev_cb_exp_proto = SIGNAL_PROTO_V4;
+
+void mock_ctx_event_ct_create_map_full(mock_ctx_event_type_t type,
+						struct __ctx_buff* ctx,
+						__u32 proto,
+						const struct auth_key* auth)
+{
+	int exec_cnt = 0;
+
+	switch (++ev_cb_iterations) {
+		case 1:
+			test_assert_ext(ct_map_full_ev_type_1,
+						type == SIGNAL_CT_FILL_UP,
+						ev_cb_err_cnt,
+						exec_cnt);
+			test_assert_ext(ct_map_full_ev_type_1,
+						proto == ev_cb_exp_proto,
+						ev_cb_err_cnt,
+						exec_cnt);
+			break;
+		default:
+			assert(0);
+	}
+}
 
 int test_ct_create(bool v4)
 {
@@ -152,15 +180,69 @@ int test_ct_create(bool v4)
 	test_assert(check_entry_bytes3, aux3->bytes == 0);
 	test_assert(check_entry_last_seen3, aux3->last_rx_report == 0x300ULL);
 
+	//Test map_related high occupancy signal generation
+	mock_map_clear(map);
+	mock_map_clear(map_related);
+	__u32 n_fake_entries = mock_map_get_max_capacity(map_related)
+					- mock_map_get_usage(map_related);
+	test_assert(set_fake_entries_1, mock_map_set_fake_entries(map_related,
+							n_fake_entries) == 0);
+
+	//Capture signal
+	mock_set_capture_signal_cb(mock_ctx_event_ct_create_map_full);
+
+	//ICMP map
+	ev_cb_err_cnt = ev_cb_iterations = 0;
+	if (v4) {
+		ev_cb_exp_proto = SIGNAL_PROTO_V4;
+		test_assert_rc(dummy_test, DROP_CT_CREATE_FAILED,
+					ct_create4(map, map_related,
+							tuple, &ctx, dir,
+							NULL, &err));
+	} else {
+		ev_cb_exp_proto = SIGNAL_PROTO_V6;
+		test_assert_rc(dummy_test, DROP_CT_CREATE_FAILED,
+					ct_create6(map, map_related,
+							tuple, &ctx, dir,
+							NULL, &err));
+	}
+	test_assert(check_signals_pre, ev_cb_iterations == 1);
+	test_assert(check_signals_1, ev_cb_err_cnt == 0);
+
+	//flow map
+	mock_map_set_fake_entries(map_related, 0);
+	n_fake_entries = mock_map_get_max_capacity(map)
+					- mock_map_get_usage(map);
+	test_assert(set_fake_entries_1, mock_map_set_fake_entries(map,
+							n_fake_entries) == 0);
+
+	ev_cb_err_cnt = ev_cb_iterations = 0;
+	if (v4) {
+		ev_cb_exp_proto = SIGNAL_PROTO_V4;
+		test_assert_rc(dummy_test, DROP_CT_CREATE_FAILED,
+					ct_create4(map, map_related,
+							tuple, &ctx, dir,
+							NULL, &err));
+	} else {
+		ev_cb_exp_proto = SIGNAL_PROTO_V6;
+		test_assert_rc(dummy_test, DROP_CT_CREATE_FAILED,
+					ct_create6(map, map_related,
+							tuple, &ctx, dir,
+							NULL, &err));
+	}
+	test_assert(check_signals_pre, ev_cb_iterations == 1);
+	test_assert(check_signals_1, ev_cb_err_cnt == 0);
+
 	//Cleanup
 	mock_map_clear(map);
 	mock_map_clear(map_related);
+	mock_set_capture_signal_cb(NULL);
+	mock_map_set_fake_entries(map, 0);
 
 	test_result_msg("'%s:v%d'\n", __FUNCTION__, v4? 4 : 6);
 
 	return test_result();
 }
-
 
 int main(int args, char** argv)
 {
