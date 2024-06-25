@@ -18,7 +18,7 @@ BEGIN_DECLS //C++
 */
 int mock_map_update_elem(const void *map, const void *key, const void *value, __u32 flags);
 void* mock_map_lookup_elem(const void *map, const void *key);
-int mock_map_delete_elem(void *map, const void *key);
+int mock_map_delete_elem(const void *map, const void *key);
 __u32 mock_map_get_size(void* map);
 int mock_map_clear(void* map);
 
@@ -27,8 +27,36 @@ int mock_map_clear(void* map);
 #define map_delete_elem mock_map_delete_elem
 
 //Mocks
+/**
+* Initialize BPF mock maps
+*/
 void mock_maps_init();
+
+/**
+* Deinitialize BPF mock maps
+*/
 void mock_maps_fini();
+
+/**
+* Get the map max. capacity
+*/
+__u32 mock_map_get_max_capacity(void* map);
+
+/**
+* Get the current usage of the map
+*/
+__u32 mock_map_get_usage(void* map);
+
+/**
+* Add n_fake_entries to map. This is useful to simulate
+* conditions in which the map is running out of capacity.
+*/
+int mock_map_set_fake_entries(void* map, __u32 n_fake_entries);
+
+/**
+* Get configured n_fake_entries on the map.
+*/
+__u32 mock_map_get_fake_entries(void* map);
 
 END_DECLS //C++
 

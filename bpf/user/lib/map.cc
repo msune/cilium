@@ -3,6 +3,7 @@
 #include <string.h>
 #include <map>
 #include <assert.h>
+#include <stdbool.h>
 
 #define __BPF_STDDEF_H_ 1
 #define __DONT_INCLUDE_MAPS__ 1
@@ -25,7 +26,8 @@ inline bool operator<(const key_val_t& a1, const key_val_t& a2)
 
 typedef struct bpf_uspace_map_int {
 	union bpf_attr m;
-	__u32 n_entries;
+	__u32 n_entries;      //Real entries in the map
+	__u32 n_fake_entries; //Additional entries, used to compute capacity
 	std::map<key_val_t, key_val_t>* ptr;
 } bpf_uspace_map_int_t;
 
@@ -129,7 +131,8 @@ int mock_map_update_elem(const void *map, const void *key,
 		return 0;
 	}
 
-	if (int_map->n_entries >= int_map->m.max_entries) {
+	if (int_map->n_entries + int_map->n_fake_entries
+						>= int_map->m.max_entries) {
 		//TODO: LRU eviction
 		return -1;
 	}
@@ -157,7 +160,7 @@ void* mock_map_lookup_elem(const void* map, const void *key)
 	return (void*)&it->second;
 }
 
-int mock_map_delete_elem(void* map, const void *key)
+int mock_map_delete_elem(const void* map, const void *key)
 {
 	//Recover map
 	bpf_uspace_map_int_t* int_map = map_int_get(map);
@@ -196,4 +199,37 @@ int mock_map_clear(void* map)
 	int_map->ptr->clear();
 
 	return 0;
+}
+
+__u32 mock_map_get_max_capacity(void* map)
+{
+	bpf_uspace_map_int_t* int_map = map_int_get(map);
+	if (!int_map)
+		return 0;
+	return int_map->m.max_entries;
+}
+
+__u32 mock_map_get_usage(void* map)
+{
+	bpf_uspace_map_int_t* int_map = map_int_get(map);
+	if (!int_map)
+		return 0;
+	return int_map->ptr->size();
+}
+
+int mock_map_set_fake_entries(void* map, __u32 n_fake_entries)
+{
+	bpf_uspace_map_int_t* int_map = map_int_get(map);
+	if (!int_map)
+		return 1;
+	int_map->n_fake_entries = n_fake_entries;
+	return 0;
+}
+
+__u32 mock_map_set_fake_entries(void* map)
+{
+	bpf_uspace_map_int_t* int_map = map_int_get(map);
+	if (!int_map)
+		return 0;
+	return int_map->n_fake_entries;
 }
