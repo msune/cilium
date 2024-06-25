@@ -244,6 +244,89 @@ int test_ct_create(bool v4)
 	return test_result();
 }
 
+int test_ct_lookup(bool v4)
+{
+	void *map = v4? (void*)&CT_MAP_TCP4 : (void*)&CT_MAP_TCP6;
+	void *map_related = NULL;
+	struct __sk_buff ctx;
+	enum ct_dir dir = CT_INGRESS;
+	struct ct_state ct_state; (void)ct_state;
+	struct ipv4_ct_tuple tuple4;
+	struct ipv6_ct_tuple tuple6;
+	void* tuple;
+	__s8 err;
+
+
+	test_init_msg("'%s:v%d'\n", __FUNCTION__, v4? 4 : 6);
+
+	//Connection info
+	tuple = v4? (void*)&tuple4 : (void*)&tuple6;
+	if (v4) {
+		tuple4.saddr = __bpf_htonl(0x0A000001);
+		tuple4.daddr = __bpf_htonl(0x0A000201);
+	} else {
+		struct in6_addr aux;
+		aux.s6_addr32[0] = __bpf_htonl(0x2100);
+		aux.s6_addr32[1] = 0x0;
+		aux.s6_addr32[2] = 0x0;
+		aux.s6_addr32[3] = __bpf_htonl(0x1);
+		memcpy(&tuple6.saddr, &aux, sizeof(aux));
+		aux.s6_addr32[2] = __bpf_htonl(0x2);
+		memcpy(&tuple6.daddr, &aux, sizeof(aux));
+	}
+
+	//Common
+	tuple4.nexthdr = tuple6.nexthdr = IPPROTO_TCP;
+	tuple4.sport = tuple6.sport = __bpf_htons(34567);
+	tuple4.dport = tuple6.dport = __bpf_htons(80);
+	tuple4.flags = tuple6.flags = 0;
+
+	//pkt
+	ctx.len = 1500;
+	ctx.mark = 0x0;
+	ctx.ifindex = 2;
+
+	//Set wall-clock
+	mock_set_time(0x100ULL);
+
+	//Create CT state without map related
+	if (v4) {
+		test_assert_rc(dummy_test, 0, ct_create4(map, map_related,
+							tuple, &ctx, dir,
+							NULL, &err));
+	} else {
+		test_assert_rc(dummy_test, 0, ct_create6(map, map_related,
+							tuple, &ctx, dir,
+							NULL, &err));
+	}
+	test_assert(map_check_map_tcp_size,  mock_map_get_size(map) == 1);
+	struct ct_entry* aux = (struct ct_entry*)map_lookup_elem(map, tuple);
+	test_assert(map_check_tuple, aux != NULL);
+	test_assert(check_entry_pkts, aux->packets == 1);
+	test_assert(check_entry_bytes, aux->bytes == 1500);
+	test_assert(check_entry_last_seen, aux->last_rx_report == 0x100ULL);
+
+	//Perform a lookup
+	if (v4) {
+		struct iphdr ip4;
+		__u32 monitor;
+		int off = 14;
+
+		test_assert_rc(dummy_test, 0, ct_lookup4(map, tuple, &ctx, &ip4,
+						off, dir, &ct_state, &monitor));
+	} else {
+
+	}
+
+	//Cleanup
+	mock_map_clear(map);
+	mock_map_clear(map_related);
+
+	test_result_msg("'%s:v%d'\n", __FUNCTION__, v4? 4 : 6);
+
+	return test_result();
+}
+
 int main(int args, char** argv)
 {
 	int rc = 0;
@@ -252,8 +335,8 @@ int main(int args, char** argv)
 
 	rc |= test_ct_create(true);
 	rc |= test_ct_create(false);
-
-	//TODO add more (lookup)
+	rc |= test_ct_lookup(true);
+	rc |= test_ct_lookup(false);
 
 	mock_fini();
 
