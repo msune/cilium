@@ -7,7 +7,7 @@
 * Initialize test
 */
 #define test_init() int __test_rcs = 0, __test_execs = 0
-#define test_init_msg(MSG, ...) test_init(); fprintf(stderr, "[TEST] Starting " MSG, __VA_ARGS__) 
+#define test_init_msg(MSG, ...) test_init(); fprintf(stderr, "[TEST] Starting " MSG, __VA_ARGS__)
 
 /**
 * Test assert return code
@@ -25,15 +25,21 @@
 	} while(0); ++__test_execs
 
 /**
-* Test condition
+* Test condition (external counter)
 */
-#define test_assert(NAME, EXP)						\
+#define test_assert_ext(NAME, EXP, ERR_CNT, EXEC_CNT)			\
 	if ( ! ( EXP ) ) {						\
 		fprintf(stderr, "[TEST][%s:%d] FAILED "#NAME": '" #EXP "'\n",\
 						__FILE__, __LINE__);	\
-		++__test_rcs;						\
+		++ERR_CNT;						\
 	}								\
-	++__test_execs
+	++EXEC_CNT
+
+/**
+* Test condition
+*/
+#define test_assert(NAME, EXP) \
+	test_assert_ext(NAME, EXP, __test_rcs, __test_execs)
 
 /**
 * Collect results of all asserts
@@ -41,6 +47,6 @@
 #define test_result() (__test_rcs)
 #define test_result_msg(MSG, ...) fprintf(stderr, "[TEST] Failed asserts %d/%d " MSG, \
 						__test_rcs, __test_execs, \
-						__VA_ARGS__) 
+						__VA_ARGS__)
 
 #endif //BPF_USPACE_TEST_H
