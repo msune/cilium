@@ -45,8 +45,10 @@
 * Collect results of all asserts
 */
 #define test_result() (__test_rcs)
-#define test_result_msg(MSG, ...) fprintf(stderr, "[TEST] Failed asserts %d/%d " MSG, \
-						__test_rcs, __test_execs, \
-						__VA_ARGS__)
+#define test_result_msg(MSG, ...) \
+	fprintf(stderr, "[TEST] %s asserts %d/%d " MSG, \
+					__test_rcs? "FAILED" : "PASSED", \
+					__test_rcs, __test_execs, \
+					__VA_ARGS__)
 
 #endif //BPF_USPACE_TEST_H
