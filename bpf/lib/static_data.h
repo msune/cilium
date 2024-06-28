@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 /* Copyright Authors of Cilium */
 
-#pragma once
+#ifndef __LIB_STATIC_DATA__
+#define __LIB_STATIC_DATA__
 
 #include <bpf/ctx/ctx.h>
 #include <bpf/api.h>
@@ -32,6 +33,8 @@
  */
 #define ASSIGN_CONFIG(type, name, value) \
 	static const type __config_##name = value;
+
+#ifndef CONFIG
 
 /* Access a global configuration variable declared using DECLARE_CONFIG(). All
  * access must be done through this macro to ensure the loader can correctly
@@ -74,6 +77,8 @@
 	asm volatile("%[out] = __config_" #name " ll" : [out]"=r"(out)); \
 	(typeof(__config_##name))out; \
 })
+
+#endif //CONFIG
 
 /* Deprecated, use CONFIG instead. */
 #define fetch_u16(x) CONFIG(x)
@@ -118,3 +123,5 @@
 			(__u32)(__u8)(a1) << 24 | (__u32)(__u8)(a2) << 16 | \
 			(__u32)(__u8)(a3) << 8  | (__u32)(__u8)(a4)) \
 	ASSIGN_CONFIG(__u32, name##_2, (__u32)(__u8)(a5) << 8  | (__u32)(__u8)(a6))
+
+#endif /* __LIB_STATIC_DATA__ */
