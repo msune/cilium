@@ -68,7 +68,7 @@ debug:
 
 
 #Test targets
-$(TARGETS): $(TEST_OBJ) $(LIB_C_OBJ) $(LIB_CXX_OBJ)
+$(BUILD_DIR)/unit/%: $(BUILD_DIR)/unit/%.o $(LIB_C_OBJ) $(LIB_CXX_OBJ)
 	$(QUIET) ${CLANG} ${CLANG_FLAGS} ${CLANG_LDFLAGS} -o $@ $^
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
