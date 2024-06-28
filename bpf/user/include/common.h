@@ -17,6 +17,7 @@
 #include "user_helpers.h"
 //We don't want BPF custom builtins in userspace
 #include "user_builtins.h"
+#include "user_static_data.h"
 
 #ifdef MOCK_TC
 #include <bpf/ctx/skb.h>
