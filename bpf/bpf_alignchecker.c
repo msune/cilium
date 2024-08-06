@@ -5,7 +5,6 @@
 #define TRACE_NOTIFY
 #define DROP_NOTIFY
 #define POLICY_VERDICT_NOTIFY
-#define ENABLE_CAPTURE
 #define TRACE_SOCK_NOTIFY
 
 #include <bpf/ctx/unspec.h>

@@ -6,8 +6,8 @@
 #include <bpf/ctx/ctx.h>
 #include <bpf/api.h>
 
-#ifdef ENABLE_CAPTURE
 #include "common.h"
+#include "features.h"
 #include "time_cache.h"
 #include "lb.h"
 
@@ -454,6 +454,9 @@ cilium_capture_cached(struct __ctx_buff *ctx __maybe_unused,
 static __always_inline void
 cilium_capture_in(struct __ctx_buff *ctx __maybe_unused)
 {
+	if (!cilium_feature_enabled(CILIUM_FEAT_ENABLE_CAPTURE))
+		return;
+
 	__u16 cap_len;
 	__u16 rule_id;
 
@@ -464,6 +467,9 @@ cilium_capture_in(struct __ctx_buff *ctx __maybe_unused)
 static __always_inline void
 cilium_capture_out(struct __ctx_buff *ctx __maybe_unused)
 {
+	if (!cilium_feature_enabled(CILIUM_FEAT_ENABLE_CAPTURE))
+		return;
+
 	__u32 cap_len;
 	__u16 rule_id;
 
@@ -474,17 +480,3 @@ cilium_capture_out(struct __ctx_buff *ctx __maybe_unused)
 	if (cilium_capture_cached(ctx, &rule_id, &cap_len))
 		__cilium_capture_out(ctx, rule_id, cap_len);
 }
-
-#else /* ENABLE_CAPTURE */
-
-static __always_inline void
-cilium_capture_in(struct __ctx_buff *ctx __maybe_unused)
-{
-}
-
-static __always_inline void
-cilium_capture_out(struct __ctx_buff *ctx __maybe_unused)
-{
-}
-
-#endif /* ENABLE_CAPTURE */
