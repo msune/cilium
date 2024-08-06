@@ -244,6 +244,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
 		cDefinesMap["PREALLOCATE_MAPS"] = "1"
 	}
 
+	cDefinesMap["FEATURES_MAP"] = "cilium_features_map"
 	cDefinesMap["EVENTS_MAP"] = eventsmap.MapName
 	cDefinesMap["EVENTS_MAP_RATE_LIMIT"] = fmt.Sprintf("%d", option.Config.BPFEventsDefaultRateLimit)
 	cDefinesMap["EVENTS_MAP_BURST_LIMIT"] = fmt.Sprintf("%d", option.Config.BPFEventsDefaultBurstLimit)

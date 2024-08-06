@@ -10,6 +10,12 @@
 #include "bpf/compiler.h"
 
 struct {
+	__uint(type, BPF_MAP_TYPE_STACK);
+	__type(key, __u64);
+	__uint(pinning, LIBBPF_PIN_BY_NAME);
+} FEATURES_MAP __section_maps_btf;
+
+struct {
 	__uint(type, BPF_MAP_TYPE_HASH);
 	__type(key, struct endpoint_key);
 	__type(value, struct endpoint_info);
