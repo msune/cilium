@@ -1,0 +1,87 @@
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
+/* Copyright Authors of Cilium */
+
+#pragma once
+
+#include <bpf/ctx/ctx.h>
+
+#define HD_MAX_BYTES 64
+#define HD_ASCII_NUM0 '0'
+#define HD_ASCII_LOWA 'a'
+
+# define hex_printk(fmt, ...)					\
+		({						\
+			const char ____fmt[] = fmt;		\
+			trace_printk(____fmt, sizeof(____fmt),	\
+				     ##__VA_ARGS__);		\
+		})
+
+static __always_inline
+char hexdump_nibble_to_char(__u8 nib)
+{
+    return nib < 10 ? (nib + HD_ASCII_NUM0) : (nib - 10 + HD_ASCII_LOWA);
+}
+
+/**
+* Dumps first len bytes (or HD_MAX_BYTES) starting at offset off
+*/
+static __always_inline
+void hexdump_len_off(const char* msg, const struct __ctx_buff *ctx,
+		     const __u16 len, const __u8 off)
+{
+	__u16 i;
+	char *b;
+	char buf[HD_MAX_BYTES*2 + 1]= {0};
+	void *data     = (void *)(long)ctx->data;
+	void *data_end = (void *)(long)ctx->data_end;
+
+	//Further clamp dump len to either max of pkt or HD_MAX_BYTES
+	//and make sure it doesn't get out of the pkt boundaries
+	__u32 pkt_len = (data_end - data);
+	__u32 max_dump_len = HD_MAX_BYTES < len? HD_MAX_BYTES : len;
+	max_dump_len = max_dump_len > pkt_len? pkt_len : max_dump_len;
+
+	if (data + off + max_dump_len > data_end)
+		max_dump_len = pkt_len - off;
+
+	for (i = 0; i < HD_MAX_BYTES; ++i) {
+		if (i >= max_dump_len)
+			break;
+
+		if (data + off + i + 1 > data_end)
+			break;
+		b = (char *)(data + off + i);
+
+		buf[i*2]     = hexdump_nibble_to_char((*b & 0xF0) >> 4);
+		buf[i*2 + 1] = hexdump_nibble_to_char((*b & 0x0F));
+	}
+
+	buf[2 * i] = '\0';
+	hex_printk("%s: pkt[%s]", msg, buf);
+}
+
+/**
+* Dumps packet (or up to HD_MAX_BYTES) starting at offset off
+*/
+static __always_inline
+void hexdump_off(const char* msg, const struct __ctx_buff *ctx, const __u8 off)
+{
+	hexdump_len_off(msg, ctx, HD_MAX_BYTES, off);
+}
+/**
+* Dump first len bytes of packet
+*/
+static __always_inline
+void hexdump_len(const char* msg, const struct __ctx_buff *ctx, const __u16 len)
+{
+	hexdump_len_off(msg, ctx, len, 0);
+}
+
+/**
+* Dump all pkt up to HD_MAX_BYTES
+*/
+static __always_inline
+void hexdump(const char* msg, const struct __ctx_buff *ctx)
+{
+	hexdump_len_off(msg, ctx, HD_MAX_BYTES, 0);
+}
