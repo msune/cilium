@@ -484,15 +484,18 @@ icmp6_ndisc_validate(struct __ctx_buff *ctx, struct ipv6hdr* ip6,
 					union v6addr* sip,
 					union v6addr *tip)
 {
-	__u8 nexthdr;
+	void *data_end = (void *) (long) ctx->data_end;
 	struct icmp6hdr* icmp;
+	__u8 nexthdr = ip6->nexthdr;
 
 	int l3_off = (__u8*)ip6 - (__u8*)ctx_data(ctx);
 	int l4_off = ipv6_hdrlen_offset(ctx, &nexthdr, l3_off);
 	if (l4_off < 0 || nexthdr != NEXTHDR_ICMP)
 		return false;
 
-	icmp = (struct icmp6hdr*) ((__u8*)ctx_data(ctx) + l4_off);
+	icmp = (struct icmp6hdr*) ((__u8*)ip6 + l4_off);
+	if ((void*)icmp + sizeof(*icmp) > data_end)
+		return false;
 	if (icmp->icmp6_type != ICMP6_NS_MSG_TYPE)
 		return false;
 

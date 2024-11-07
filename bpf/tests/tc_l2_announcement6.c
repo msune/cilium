@@ -26,8 +26,8 @@
 
 #include <bpf_host.c>
 
-#define NS_MSG_SIZE (4 /* ICMP6: TYPE+CODE+CSUM */)
-#define NA_MSG_SIZE (4 /* ICMP6: TYPE+CODE+CSUM */ + 8 /* LL Address opt */)
+#define NS_MSG_SIZE (sizeof(struct icmp6hdr) /* ICMP6: TYPE+CODE+CSUM */)
+#define NA_MSG_SIZE (sizeof(struct icmp6hdr) /* ICMP6: TYPE+CODE+CSUM */ + 8 /* LL Address opt */)
 
 struct {
 	__uint(type, BPF_MAP_TYPE_PROG_ARRAY);
@@ -130,14 +130,17 @@ int l2_announcement_nd_no_entry_check(__maybe_unused const struct __ctx_buff *ct
 	if ((void*)l2 + sizeof(struct ethhdr) > data_end)
 		test_fatal("l2 out of bounds");
 
-	l3 = data + sizeof(__u32) + sizeof(struct ethhdr);
-	icmp = (void*)l3 + sizeof(struct ipv6hdr);
-	if ((void*)l3 + sizeof(struct ipv6hdr) + NS_MSG_SIZE > data_end)
+	l3 = (void*)l2 + sizeof(struct ethhdr);
+	if ((void*)l3 + sizeof(struct ipv6hdr) > data_end)
 		test_fatal("l3 out of bounds");
 
+	icmp = (void*)l3 + sizeof(struct ipv6hdr);
+	if ((void*)icmp + NS_MSG_SIZE > data_end)
+		test_fatal("icmp out of bounds");
+
 	/* L2 */
-	assert(memcmp(l2->h_source, (__u8 *)mac_one, ETH_ALEN) == 0);
-	assert(memcmp(l2->h_dest, (__u8 *)mac_bcast, ETH_ALEN) == 0);
+	assert(memcmp(l2->h_source, (__u8*)mac_one, ETH_ALEN) == 0);
+	assert(memcmp(l2->h_dest, (__u8*)mac_bcast, ETH_ALEN) == 0);
 
 	/* IPv6 */
 	assert(memcmp(&l3->saddr, (void*)&v6_ext_one, sizeof(v6_ext_one)) == 0);
@@ -215,16 +218,17 @@ int l2_announcement_nd_happy_path_check(__maybe_unused const struct __ctx_buff *
 	if ((void*)l2 + sizeof(struct ethhdr) > data_end)
 		test_fatal("l2 out of bounds");
 
-	l3 = data + sizeof(__u32) + sizeof(struct ethhdr);
-	icmp = (void*)l3 + sizeof(struct ipv6hdr);
-	lla_opt = (void*)icmp + sizeof(struct icmp6hdr) + 2 /* Type + Length */;
-
-	if ((void*)l3 + sizeof(struct ipv6hdr) + NA_MSG_SIZE > data_end)
+	l3 = (void*)l2 + sizeof(struct ethhdr);
+	if ((void*)l3 + sizeof(struct ipv6hdr) > data_end)
 		test_fatal("l3 out of bounds");
 
+	icmp = (void*)l3 + sizeof(struct ipv6hdr);
+	if ((void*)icmp + NA_MSG_SIZE > data_end)
+		test_fatal("icmp out of bounds");
+
 	/* L2 */
-	assert(memcmp(l2->h_source, (__u8 *)mac_two, ETH_ALEN) == 0);
-	assert(memcmp(l2->h_dest, (__u8 *)mac_one, ETH_ALEN) == 0);
+	assert(memcmp(l2->h_source, (__u8*)mac_two, ETH_ALEN) == 0);
+	assert(memcmp(l2->h_dest, (__u8*)mac_one, ETH_ALEN) == 0);
 
 	/* IPv6 */
 	assert(memcmp(&l3->saddr, (void*)&v6_svc_one, sizeof(v6_svc_one)) == 0);
@@ -241,7 +245,7 @@ int l2_announcement_nd_happy_path_check(__maybe_unused const struct __ctx_buff *
 	assert(icmp->icmp6_ndiscreserved == 0);
 
 	/* check Link layer address */
-	assert(memcmp(&lla_opt, (void*)&mac_two, sizeof(mac_two)));
+	assert(memcmp(&lla_opt, (void*)mac_two, sizeof(mac_two)));
 
 	test_finish();
 }

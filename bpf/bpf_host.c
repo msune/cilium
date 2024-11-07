@@ -1065,16 +1065,20 @@ static __always_inline int handle_l2_announcement(struct __ctx_buff *ctx,
 
 		ret = arp_respond(ctx, &mac, d.v4.tip, &smac, d.v4.sip, 0);
 	} else {
-
+		printk("A6");
 		if (!icmp6_ndisc_validate(ctx, ip6, &mac, &smac, &d.v6.sip,
 								&d.v6.tip))
 			return CTX_ACT_OK;
+		printk("B6");
 
 		d.v6.key.ip6 = d.v6.tip;
 		d.v6.key.ifindex = ctx->ingress_ifindex;
+		d.v6.key.pad4 = 0;
+		printk("C6");
 		stats = map_lookup_elem(&L2_RESPONDER_MAP6, &d.v6.key);
 		if (!stats)
 			return CTX_ACT_OK;
+		printk("D6");
 		int l3_off = (__u8*)ip6 - (__u8*)ctx_data(ctx);
 		ret = send_icmp6_ndisc_adv(ctx, l3_off, &mac, false);
 	}
@@ -1185,6 +1189,7 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, const bool from_host)
 # endif
 #ifdef ENABLE_IPV6
 	case bpf_htons(ETH_P_IPV6):
+
 		if (!revalidate_data_pull(ctx, &data, &data_end, &ip6))
 			return send_drop_notify_error(ctx, identity, DROP_INVALID,
 						      CTX_ACT_DROP, METRIC_INGRESS);
@@ -1195,6 +1200,14 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, const bool from_host)
 				break;
 		}
 #endif /*ENABLE_L2_ANNOUNCEMENTS */
+
+		/* FIXME: this should not be needed, but it seems R9 (ip6 ptr)
+		 * is a scalar at this point, so we need to reeval ip6. Register
+		 * pressure?
+		 */
+		if (!revalidate_data_pull(ctx, &data, &data_end, &ip6))
+			return send_drop_notify_error(ctx, identity, DROP_INVALID,
+						      CTX_ACT_DROP, METRIC_INGRESS);
 
 		identity = resolve_srcid_ipv6(ctx, ip6, identity, &ipcache_srcid, from_host);
 		ctx_store_meta(ctx, CB_SRC_LABEL, identity);

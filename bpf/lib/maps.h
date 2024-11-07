@@ -210,6 +210,7 @@ struct {
 struct l2_responder_v6_key {
 	union v6addr ip6;
 	__u32 ifindex;
+	__u32 pad4;
 };
 
 struct {
