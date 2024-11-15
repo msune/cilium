@@ -295,8 +295,9 @@ int ipv6_from_netdev_ns_for_pod_check_mcast(const struct __ctx_buff *ctx)
  */
 
 /* "Targeted" NS */
-PKTGEN("tc", "021_ipv6_from_netdev_ns_for_node_ip")
-int ipv6_from_netdev_ns_for_node_ip_pktgen(struct __ctx_buff *ctx)
+static __always_inline
+int __ipv6_from_netdev_ns_for_node_ip_pktgen(struct __ctx_buff *ctx,
+							bool llsrc_opt)
 {
 	struct pktgen builder;
 	struct icmp6hdr *l4;
@@ -318,16 +319,17 @@ int ipv6_from_netdev_ns_for_node_ip_pktgen(struct __ctx_buff *ctx)
 	if (!data)
 		return TEST_ERROR;
 
-	__u8 options[] = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1};
-
-	data = pktgen__push_data(&builder, (__u8 *)options, 8);
+	if (llsrc_opt) {
+		__u8 options[] = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1};
+		data = pktgen__push_data(&builder, (__u8 *)options, 8);
+	}
 
 	pktgen__finish(&builder);
 	return 0;
 }
 
-SETUP("tc", "021_ipv6_from_netdev_ns_for_node_ip")
-int ipv6_from_netdev_ns_for_node_ip_setup(struct __ctx_buff *ctx)
+static __always_inline
+int __ipv6_from_netdev_ns_for_node_ip_setup(struct __ctx_buff *ctx)
 {
 	union v6addr node_ip;
 
@@ -339,8 +341,9 @@ int ipv6_from_netdev_ns_for_node_ip_setup(struct __ctx_buff *ctx)
 	return TEST_ERROR;
 }
 
-CHECK("tc", "021_ipv6_from_netdev_ns_for_node_ip")
-int ipv6_from_netdev_ns_for_node_ip_check(const struct __ctx_buff *ctx)
+static __always_inline
+int __ipv6_from_netdev_ns_for_node_ip_check(const struct __ctx_buff *ctx,
+							bool llsrc_opt)
 {
 	void *data;
 	void *data_end;
@@ -404,8 +407,51 @@ int ipv6_from_netdev_ns_for_node_ip_check(const struct __ctx_buff *ctx)
 	if (memcmp(payload, (__u8 *)&node_ip, 16) != 0)
 		test_fatal("icmp6 payload target was changed");
 
+	if (llsrc_opt) {
+
+	}
+
 	printk("-- Test end: 021_ipv6_from_netdev_ns_for_node_ip\n");
 	test_finish();
+}
+
+/* With LL SRC option */
+PKTGEN("tc", "0211_ipv6_from_netdev_ns_for_node_ip")
+int ipv6_from_netdev_ns_for_node_ip_pktgen(struct __ctx_buff *ctx)
+{
+	return __ipv6_from_netdev_ns_for_node_ip_pktgen(ctx, true);
+}
+
+SETUP("tc", "0211_ipv6_from_netdev_ns_for_node_ip")
+int ipv6_from_netdev_ns_for_node_ip_setup(struct __ctx_buff *ctx)
+{
+	return __ipv6_from_netdev_ns_for_node_ip_setup(ctx);
+}
+
+CHECK("tc", "0211_ipv6_from_netdev_ns_for_node_ip")
+int ipv6_from_netdev_ns_for_node_ip_check(const struct __ctx_buff *ctx)
+{
+	return __ipv6_from_netdev_ns_for_node_ip_check(ctx, true);
+}
+
+/* Without LL SRC option */
+PKTGEN("tc", "0212_ipv6_from_netdev_ns_for_node_ip_nollsrcopt")
+int ipv6_from_netdev_ns_for_node_ip_pktgen_nollsrcopt(struct __ctx_buff *ctx)
+{
+	return __ipv6_from_netdev_ns_for_node_ip_pktgen(ctx, false);
+}
+
+SETUP("tc", "0212_ipv6_from_netdev_ns_for_node_ip_nollsrcopt")
+int ipv6_from_netdev_ns_for_node_ip_setup_nollsrcopt(struct __ctx_buff *ctx)
+{
+	return __ipv6_from_netdev_ns_for_node_ip_setup(ctx);
+}
+
+CHECK("tc", "0212_ipv6_from_netdev_ns_for_node_ip_nollsrcopt")
+int ipv6_from_netdev_ns_for_node_ip_check_nollsrcopt(
+						const struct __ctx_buff *ctx)
+{
+	return __ipv6_from_netdev_ns_for_node_ip_check(ctx, false);
 }
 
 /* Bcast NS */
