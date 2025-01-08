@@ -1078,9 +1078,10 @@ static __always_inline int handle_l2_announcement(struct __ctx_buff *ctx,
 		stats = map_lookup_elem(&L2_RESPONDER_MAP6, &d.v6.key);
 		if (!stats)
 			return CTX_ACT_OK;
-		printk("D6");
 		int l3_off = (__u8*)ip6 - (__u8*)ctx_data(ctx);
+		printk("D6 %u", l3_off);
 		ret = send_icmp6_ndisc_adv(ctx, l3_off, &mac, false);
+		printk("D7, ret: %d", ret);
 	}
 
 	if (ret == CTX_ACT_REDIRECT)
@@ -1088,7 +1089,6 @@ static __always_inline int handle_l2_announcement(struct __ctx_buff *ctx,
 
 	return ret;
 }
-
 #endif
 
 static __always_inline int
@@ -1196,10 +1196,8 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, const bool from_host)
 #ifdef ENABLE_L2_ANNOUNCEMENTS
 		if (ip6->nexthdr == NEXTHDR_ICMP) {
 			ret = handle_l2_announcement(ctx, ip6);
-			if (ret != CTX_ACT_OK)
-				break;
+			break;
 		}
-#endif /*ENABLE_L2_ANNOUNCEMENTS */
 
 		/* FIXME: this should not be needed, but it seems R9 (ip6 ptr)
 		 * is a scalar at this point, so we need to reeval ip6. Register
@@ -1208,6 +1206,7 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, const bool from_host)
 		if (!revalidate_data_pull(ctx, &data, &data_end, &ip6))
 			return send_drop_notify_error(ctx, identity, DROP_INVALID,
 						      CTX_ACT_DROP, METRIC_INGRESS);
+#endif /*ENABLE_L2_ANNOUNCEMENTS */
 
 		identity = resolve_srcid_ipv6(ctx, ip6, identity, &ipcache_srcid, from_host);
 		ctx_store_meta(ctx, CB_SRC_LABEL, identity);

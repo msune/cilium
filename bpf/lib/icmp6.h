@@ -46,7 +46,8 @@ static __always_inline int icmp6_load_type(struct __ctx_buff *ctx, int l4_off, _
 	return ctx_load_bytes(ctx, l4_off + ICMP6_TYPE_OFFSET, type, sizeof(*type));
 }
 
-static __always_inline int icmp6_send_reply(struct __ctx_buff *ctx, int nh_off)
+static __always_inline
+int icmp6_send_reply(struct __ctx_buff *ctx, int nh_off, bool to_router)
 {
 	union macaddr smac, dmac = THIS_INTERFACE_MAC;
 	const int csum_off = nh_off + ICMP6_CSUM_OFFSET;
@@ -57,10 +58,16 @@ static __always_inline int icmp6_send_reply(struct __ctx_buff *ctx, int nh_off)
 	    ipv6_load_daddr(ctx, nh_off, &dip) < 0)
 		return DROP_INVALID;
 
-	BPF_V6(router_ip, ROUTER_IP);
-	/* ctx->saddr = ctx->daddr */
-	if (ipv6_store_saddr(ctx, router_ip.addr, nh_off) < 0)
-		return DROP_WRITE_ERROR;
+	if (to_router) {
+		BPF_V6(router_ip, ROUTER_IP);
+		/* ctx->saddr = ctx->daddr */
+		if (ipv6_store_saddr(ctx, router_ip.addr, nh_off) < 0)
+			return DROP_WRITE_ERROR;
+	} else {
+		if (ipv6_store_saddr(ctx, dip.addr, nh_off) < 0)
+			return DROP_WRITE_ERROR;
+	}
+
 	/* ctx->daddr = ctx->saddr */
 	if (ipv6_store_daddr(ctx, sip.addr, nh_off) < 0)
 		return DROP_WRITE_ERROR;
@@ -105,9 +112,11 @@ send_icmp6_ndisc_adv(struct __ctx_buff *ctx, int nh_off,
 	const int csum_off = nh_off + ICMP6_CSUM_OFFSET;
 	__be32 sum;
 
+	printk("ndisc_adv A");
 	if (ctx_load_bytes(ctx, nh_off + sizeof(struct ipv6hdr), &icmp6hdr_old,
 			   sizeof(icmp6hdr_old)) < 0)
 		return DROP_INVALID;
+	printk("ndisc_adv B");
 
 	/* fill icmp6hdr */
 	icmp6hdr.icmp6_type = ICMP6_NA_MSG_TYPE;
@@ -115,29 +124,52 @@ send_icmp6_ndisc_adv(struct __ctx_buff *ctx, int nh_off,
 	icmp6hdr.icmp6_cksum = icmp6hdr_old.icmp6_cksum;
 	icmp6hdr.icmp6_dataun.un_data32[0] = 0;
 
+	icmp6hdr.icmp6_solicited = 1;
 	if (to_router) {
 		icmp6hdr.icmp6_router = 1;
-		icmp6hdr.icmp6_solicited = 1;
 		icmp6hdr.icmp6_override = 0;
 	} else {
 		icmp6hdr.icmp6_router = 0;
-		icmp6hdr.icmp6_solicited = 1;
 		icmp6hdr.icmp6_override = 1;
 	}
 
+	printk("ndisc_adv C");
 	if (ctx_store_bytes(ctx, nh_off + sizeof(struct ipv6hdr), &icmp6hdr,
 			    sizeof(icmp6hdr), 0) < 0)
 		return DROP_WRITE_ERROR;
+	printk("ndisc_adv D");
 
 	/* fixup checksums */
 	sum = csum_diff(&icmp6hdr_old, sizeof(icmp6hdr_old),
 			&icmp6hdr, sizeof(icmp6hdr), 0);
 	if (l4_csum_replace(ctx, csum_off, 0, sum, BPF_F_PSEUDO_HDR) < 0)
 		return DROP_CSUM_L4;
+	__u32 pkt_len = (void*)(long)ctx->data_end - (void*)(long)ctx->data;
+	(void)pkt_len;
+	printk("ndisc_adv E pkt size: %u total_off: %lu, size: %lu", pkt_len, nh_off + ICMP6_ND_OPTS, sizeof(opts_old));
 
+#if 0
+	/*
+	 * NOTE: according to RFC4861, sections 4.3 and 7.2.2 unicast neighbour
+	 * solicitations (reachability check) SHOULD but are NOT REQUIRED to
+	 * include the SRC_LL_ADDR option in the NS message.
+	 *
+	 * Likewise, neighbour solicitations during Duplicate Address Detection
+	 * (DAD, RFC4862), SRC_LL_ADDR option is not present.
+	 *
+	 * make room (Type+Length + MAC addr = 8 byte) and 0 it to make sure
+	 * csum is additive.
+	 */
+	if (ctx_load_bytes(ctx, nh_off + ICMP6_ND_OPTS, opts_old,
+							sizeof(opts_old)) < 0) {
+		printk("LL option not present baby");
+		return DROP_INVALID;
+	}
+#endif
 	/* get old options */
 	if (ctx_load_bytes(ctx, nh_off + ICMP6_ND_OPTS, opts_old, sizeof(opts_old)) < 0)
 		return DROP_INVALID;
+	printk("ndisc_adv F");
 
 	opts[0] = 2;
 	opts[1] = 1;
@@ -151,13 +183,15 @@ send_icmp6_ndisc_adv(struct __ctx_buff *ctx, int nh_off,
 	/* store ND_OPT_TARGET_LL_ADDR option */
 	if (ctx_store_bytes(ctx, nh_off + ICMP6_ND_OPTS, opts, sizeof(opts), 0) < 0)
 		return DROP_WRITE_ERROR;
+	printk("ndisc_adv G");
 
 	/* fixup checksum */
 	sum = csum_diff(opts_old, sizeof(opts_old), opts, sizeof(opts), 0);
 	if (l4_csum_replace(ctx, csum_off, 0, sum, BPF_F_PSEUDO_HDR) < 0)
 		return DROP_CSUM_L4;
+	printk("ndisc_adv H");
 
-	return icmp6_send_reply(ctx, nh_off);
+	return icmp6_send_reply(ctx, nh_off, to_router);
 }
 
 static __always_inline __be32 compute_icmp6_csum(char data[80], __u16 payload_len,
@@ -254,7 +288,7 @@ static __always_inline int __icmp6_send_time_exceeded(struct __ctx_buff *ctx,
 	if (l4_csum_replace(ctx, csum_off, 0, sum, BPF_F_PSEUDO_HDR) < 0)
 		return DROP_CSUM_L4;
 
-	return icmp6_send_reply(ctx, nh_off);
+	return icmp6_send_reply(ctx, nh_off, true);
 }
 
 #ifndef SKIP_ICMPV6_HOPLIMIT_HANDLING
