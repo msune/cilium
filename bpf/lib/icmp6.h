@@ -544,8 +544,12 @@ bool icmp6_ndisc_validate(struct __ctx_buff *ctx, struct ipv6hdr *ip6,
 {
 	__u8 nexthdr;
 	struct icmp6hdr *icmp;
-	int l3_off = (__u8 *)ip6 - (__u8 *)ctx_data(ctx);
-	int l4_off = ipv6_hdrlen_offset(ctx, &nexthdr, l3_off);
+	int l3_off, l4_off;
+
+	l3_off = (__u8 *)ip6 - (__u8 *)ctx_data(ctx);
+	printk("pre ipv6_hdrlen_offset");
+	l4_off = ipv6_hdrlen_offset(ctx, &nexthdr, l3_off);
+	printk("post ipv6_hdrlen_offset");
 
 	if (l4_off < 0 || nexthdr != NEXTHDR_ICMP)
 		return false;

@@ -67,6 +67,7 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 	if (!l4)
 		return TEST_ERROR;
 
+#if 0
 	l4->icmp6_type = ICMP6_NS_MSG_TYPE;
 	l4->icmp6_code = 0;
 
@@ -74,6 +75,7 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 	l4->icmp6_solicited = 1;
 	l4->icmp6_override = 0;
 	l4->icmp6_ndiscreserved = 0;
+#endif
 
 	data = pktgen__push_data(&builder, (__u8 *)v6_svc_one, V6_ALEN);
 	if (!data)
@@ -167,7 +169,6 @@ int l2_announcement_nd_no_entry_check(const struct __ctx_buff *ctx)
 	test_finish();
 }
 
-#if 0
 PKTGEN("tc", "1_happy_path")
 int l2_announcement_nd_happy_path_pktgen(struct __ctx_buff *ctx)
 {
@@ -262,4 +263,3 @@ int l2_announcement_nd_happy_path_check(const struct __ctx_buff *ctx)
 
 	test_finish();
 }
-#endif
