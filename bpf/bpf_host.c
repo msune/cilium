@@ -1057,12 +1057,18 @@ int handle_l2_announcement(struct __ctx_buff *ctx, struct ipv6hdr *ip6)
 {
 	union macaddr mac = THIS_INTERFACE_MAC;
 	union macaddr smac;
-	__be32 __maybe_unused sip;
-	__be32 __maybe_unused tip;
-	union v6addr __maybe_unused sip6;
-	union v6addr __maybe_unused tip6;
-	struct l2_responder_v4_key key;
-	struct l2_responder_v6_key key6;
+	union {
+		struct {
+			__be32 sip;
+			__be32 tip;
+			struct l2_responder_v4_key key;
+		} v4;
+		struct {
+			union v6addr __maybe_unused sip;
+			union v6addr __maybe_unused tip;
+			struct l2_responder_v6_key key;
+		} v6;
+	} d;
 	struct l2_responder_stats *stats;
 	int ret;
 	__u32 index = RUNTIME_CONFIG_AGENT_LIVENESS;
@@ -1080,24 +1086,30 @@ int handle_l2_announcement(struct __ctx_buff *ctx, struct ipv6hdr *ip6)
 		return CTX_ACT_OK;
 
 	if (!ip6) {
-		if (!arp_validate(ctx, &mac, &smac, &sip, &tip))
+		if (!arp_validate(ctx, &mac, &smac, &d.v4.sip, &d.v4.tip))
 			return CTX_ACT_OK;
 
-		key.ip4 = tip;
-		key.ifindex = ctx->ingress_ifindex;
-		stats = map_lookup_elem(&L2_RESPONDER_MAP4, &key);
+		d.v4.key.ip4 = d.v4.tip;
+		d.v4.key.ifindex = ctx->ingress_ifindex;
+		stats = map_lookup_elem(&L2_RESPONDER_MAP4, &d.v4.key);
 		if (!stats)
 			return CTX_ACT_OK;
 
-		ret = arp_respond(ctx, &mac, tip, &smac, sip, 0);
+		ret = arp_respond(ctx, &mac, d.v4.tip, &smac, d.v4.sip, 0);
 	} else {
-		if (!icmp6_ndisc_validate(ctx, ip6, &mac, &smac, &sip6, &tip6))
+		printk("My interface index is: %d", ctx->ingress_ifindex);
+		if (!icmp6_ndisc_validate(ctx, ip6, &mac, &smac, &d.v6.sip,
+					  &d.v6.tip)) {
+			printk("HEY");
 			return CTX_ACT_OK;
+		}
 
-		key6.ip6 = tip6;
-		key6.ifindex = ctx->ingress_ifindex;
-		key6.pad = 0;
-		stats = map_lookup_elem(&L2_RESPONDER_MAP6, &key6);
+		printk("Let's go!");
+
+		d.v6.key.ip6 = d.v6.tip;
+		d.v6.key.ifindex = ctx->ingress_ifindex;
+		d.v6.key.pad = 0;
+		stats = map_lookup_elem(&L2_RESPONDER_MAP6, &d.v6.key);
 		if (!stats)
 			return CTX_ACT_OK;
 
@@ -1154,15 +1166,20 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, __u32 __maybe_unused identity,
 						      CTX_ACT_DROP, METRIC_INGRESS);
 #ifdef ENABLE_L2_ANNOUNCEMENTS
 		if (ip6->nexthdr == NEXTHDR_ICMP) {
+			printk("JJJ 1");
 			ret = handle_l2_announcement(ctx, ip6);
+			printk("JJJ 2");
 			if (ret != CTX_ACT_OK)
 				break;
+			printk("JJJ 3.1");
 		}
 #endif /*ENABLE_L2_ANNOUNCEMENTS */
+		printk("JJJ 3.2");
 
 		identity = resolve_srcid_ipv6(ctx, ip6, identity, &ipcache_srcid, from_host);
 		ctx_store_meta(ctx, CB_SRC_LABEL, identity);
 
+		printk("JJJ 3.3");
 # if defined(ENABLE_HOST_FIREWALL) && !defined(ENABLE_MASQUERADE_IPV6)
 		if (from_host) {
 			/* If we don't rely on BPF-based masquerading, we need
@@ -1172,6 +1189,7 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, __u32 __maybe_unused identity,
 			ctx_store_meta(ctx, CB_IPCACHE_SRC_LABEL, ipcache_srcid);
 		}
 # endif /* defined(ENABLE_HOST_FIREWALL) && !defined(ENABLE_MASQUERADE_IPV6) */
+		printk("JJJ 3.4");
 
 # ifdef ENABLE_WIREGUARD
 		if (!from_host) {
@@ -1182,6 +1200,7 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, __u32 __maybe_unused identity,
 				trace.reason = TRACE_REASON_ENCRYPTED;
 		}
 # endif /* ENABLE_WIREGUARD */
+		printk("JJJ 3.5");
 
 		send_trace_notify(ctx, obs_point, ipcache_srcid, UNKNOWN_ID, TRACE_EP_ID_UNKNOWN,
 				  ctx->ingress_ifindex, trace.reason, trace.monitor);
@@ -1253,6 +1272,7 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, __u32 __maybe_unused identity,
 #endif /* ENABLE_HOST_FIREWALL */
 	}
 
+	printk("JJJ 4");
 	return ret;
 }
 
@@ -1267,6 +1287,7 @@ do_netdev(struct __ctx_buff *ctx, __u16 proto, __u32 __maybe_unused identity,
 __section_entry
 int cil_from_netdev(struct __ctx_buff *ctx)
 {
+	int rc;
 	__u32 src_id = UNKNOWN_ID;
 	__be16 proto = 0;
 
@@ -1337,8 +1358,9 @@ int cil_from_netdev(struct __ctx_buff *ctx)
 		return CTX_ACT_OK;
 #endif
 
-	return do_netdev(ctx, proto, UNKNOWN_ID, TRACE_FROM_NETWORK, false);
-
+	rc = do_netdev(ctx, proto, UNKNOWN_ID, TRACE_FROM_NETWORK, false);
+	printk("do_netdev: %d", rc);
+	return rc;
 drop_err:
 	return send_drop_notify_error(ctx, src_id, ret, CTX_ACT_DROP, METRIC_INGRESS);
 }

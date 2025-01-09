@@ -71,7 +71,7 @@ static __always_inline int ipv6_hdrlen_offset(struct __ctx_buff *ctx, __u8 *next
 			break;
 
 		default:
-			printk("OK default nh: %d, len: %d", *nexthdr, len);
+			printk("OKOK %d, len: %d", *nexthdr, len);
 			*nexthdr = nh;
 			return len;
 		}
