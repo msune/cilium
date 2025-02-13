@@ -56,19 +56,23 @@ def __sync_iface(ns:str, iface:str):
         cnt = cnt + 1
     raise Exception(f"Unable to sync '{iface}'!")
 
-def _pcap_sniffer_ioloop(ns:str, iface:str, filter_expr:str, pipe):
+def _pcap_sniffer_ioloop(test_name:str, ns:str, iface:str, filter_expr:str, pipe):
 
     print(f"Sniffing on {ns}:{iface}")
 
     # Get into the right NS
     netns_set(ns)
 
+    # Open pcap file
+    fpath = f"output/{test_name}/{ns}_iface.pcap"
+    pcap_writer = PcapWriter(fpath, append=False)
+
     def pkt_callback(pkt):
         hdr = struct.pack('I', len(pkt))
-        print("Sniffed pkt")
-        print(pkt)
         pipe.send_bytes(hdr)
         pipe.send_bytes(raw(pkt))
+        pcap_writer.write(pkt)
+        pcap_writer.flush()
     try:
         sniffer = AsyncSniffer(iface=iface, prn=pkt_callback, filter=filter_expr)
         sniffer.start()
@@ -78,10 +82,11 @@ def _pcap_sniffer_ioloop(ns:str, iface:str, filter_expr:str, pipe):
     while True:
         time.sleep(1)
 
-def _pcap_sniffer_spawn(ns:str, iface:str, filter_expr:str):
+def _pcap_sniffer_spawn(test_name:str, ns:str, iface:str, filter_expr:str):
     global procs
     main_pipe, sniffer_pipe = multiprocessing.Pipe()
-    proc = multiprocessing.Process(target=_pcap_sniffer_ioloop, args=(ns, iface, filter_expr, sniffer_pipe,))
+    args = (test_name, ns, iface, filter_expr, sniffer_pipe,)
+    proc = multiprocessing.Process(target=_pcap_sniffer_ioloop, args=args)
 
     proc.start()
 
@@ -122,11 +127,6 @@ def _pcap_thread_ioloop():
 
                 with mutex:
                     buffers[d["ns_iface"]].put(pkt)
-
-                print("Got pkt")
-                print(pkt)
-                if "pcap_file" in d:
-                    os.write(d["pcap_file"], pkt)
     except Exception as e:
         print(f"Exception while reading from pipes: {e}")
     finally:
@@ -137,7 +137,7 @@ def _pcap_thread_spawn():
     io_thread = threading.Thread(target=_pcap_thread_ioloop)
     io_thread.start()
 
-def pcap_sniff(ns_ifaces: list, filter_expr:str=""):
+def pcap_sniff(test_name:str, ns_ifaces: list, filter_expr:str=""):
     """
     Start sniffers on the list of ns_ifaces using the pcap filter_expr
 
@@ -149,6 +149,9 @@ def pcap_sniff(ns_ifaces: list, filter_expr:str=""):
     procs = {}
     pcap_files = {}
 
+    # Create pcap output folder for this test
+    os.makedirs(f"output/{test_name}/", exist_ok=True)
+
     #Add sentinel clause (TCP port 47 is reserved, no traffic should flow there)
     if filter_expr:
         filter_expr = f"({filter_expr}) or tcp port 47"
@@ -157,7 +160,7 @@ def pcap_sniff(ns_ifaces: list, filter_expr:str=""):
     for ns_iface in ns_ifaces:
         ns = ns_iface.split(":")[0]
         iface = ns_iface.split(":")[1]
-        _pcap_sniffer_spawn(ns, iface, filter_expr)
+        _pcap_sniffer_spawn(test_name, ns, iface, filter_expr)
 
     # Start I/O thread
     _pcap_thread_spawn()

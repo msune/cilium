@@ -20,4 +20,4 @@ setup: _setup_venv
 clean_setup:
 	@rm -rf $(VENV_PATH)
 clean:
-	@rm -rf output/*
+	@sudo rm -rf output/*

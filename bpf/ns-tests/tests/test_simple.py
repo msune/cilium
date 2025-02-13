@@ -4,10 +4,10 @@ from src.nodes import *
 from src.pcap_utils import pcap_sniff, pcap_get_pkts, pcap_stop
 
 @pytest.fixture
-def packet_capture():
+def packet_capture(request):
     """Setup and teardown packet capture."""
     interfaces = ["node1:lo"]
-    pcap_sniff(interfaces)
+    pcap_sniff(request.node.name, interfaces)
     yield
     pcap_stop()
 
