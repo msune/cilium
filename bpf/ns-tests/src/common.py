@@ -2,7 +2,6 @@ import subprocess
 import shlex
 
 def shell_exec(cmd, ns=""):
-
     cmd_ = []
     if ns != "":
         cmd_.extend(["ip", "netns", "exec", ns])

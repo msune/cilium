@@ -21,7 +21,6 @@ SYNC_READ_SLEEP_S=0.05
 
 def __sync_iface(ns:str, iface:str):
     cnt = 1
-    print(f"\nWaiting for sniffer on '{ns}:{iface}' to sync...", end="")
 
     # Get into the right NS
     netns_set(ns)
@@ -57,8 +56,6 @@ def __sync_iface(ns:str, iface:str):
     raise Exception(f"Unable to sync '{iface}'!")
 
 def _pcap_sniffer_ioloop(test_name:str, ns:str, iface:str, filter_expr:str, pipe):
-
-    print(f"Sniffing on {ns}:{iface}")
 
     # Get into the right NS
     netns_set(ns)
