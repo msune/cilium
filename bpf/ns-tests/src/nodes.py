@@ -1,13 +1,4 @@
-import subprocess
-
-def _exec(cmd):
-    try:
-        result = subprocess.run(cmd)
-        if result.returncode != 0:
-            raise Exception(f"Unknown error while running '{cmd}'. Result: {result.stderr}")
-    except subprocess.CalledProcessError as e:
-        print(f"Unable to execute '{cmd}': {e}")
-        raise e
+from src.common import *
 
 def node_create(node_id: int):
     """
@@ -19,15 +10,31 @@ def node_create(node_id: int):
     """
     try:
         ns = "node"+str(node_id)
-        _exec(['ip', 'netns', 'add', ns])
-        _exec(['ip', 'netns', 'exec', ns, "ip", "link", "set", "up", "dev", "lo"])
-    except subprocess.CalledProcessError as e:
+        shell_exec(f"ip netns add {ns}")
+
+        # Loopback
+        shell_exec(f"ip link set up dev lo", ns)
+
+        # Create node's eth0
+        shell_exec(f"ip link add eth0 type veth peer name n{node_id}_eth0", ns)
+        shell_exec(f"ip link set up dev eth0", ns)
+
+        # Bring the other pair in the default NS
+        shell_exec(f"ip link set dev n{node_id}_eth0 netns 1", ns)
+        shell_exec(f"ip link set up dev n{node_id}_eth0")
+    except Exception as e:
         print(f"Unable to create node '{node_id}': {e}")
         raise e
 
 def node_destroy(node_id: int):
     try:
-        _exec(['ip', 'netns', 'delete', "node"+str(node_id)])
-    except subprocess.CalledProcessError as e:
+        ns = "node"+str(node_id)
+
+        # Destroy eth0 in the node's ns
+        shell_exec(f"ip link del dev eth0", ns)
+
+        # Destroy NS
+        shell_exec(f"ip netns delete {ns}")
+    except Exception as e:
         print(f"Unable to destroy node '{node_id}': {e}")
         raise e

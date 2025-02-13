@@ -20,4 +20,5 @@ setup: _setup_venv
 clean_setup:
 	@rm -rf $(VENV_PATH)
 clean:
+	@for ns in $$(ip netns list | awk '{print $$1}'); do sudo sudo ip netns del $$ns; done
 	@sudo rm -rf output/*
