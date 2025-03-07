@@ -1,12 +1,12 @@
 # Packetization Layer Path MTU Discovery (PLPMTUD)
 
 Packetization Layer Path MTU Discovery (PLPMTUD) is defined in [RFC4821](https://datatracker.ietf.org/doc/html/rfc4821),
-and it's an attempt to fix some of the limitations [PMTUD](pmtud.md). PLPMTUD is
-only possible for protocols that have explicit acknolwedgement, like TCP.
+and it's an attempt to fix some of the limitations of [PMTUD](pmtud.md). PLPMTUD
+is only possible for protocols that have explicit acknolwedgements, like TCP.
 
 In TCP this is sometimes referred as TCP probing.
 
-For TCP PLPMTUD uses the TCP state machine information to craft probe packets
+TCP PLPMTUD uses the TCP state machine information to craft probe packets
 alongside of traffic to probe the effective MTU of the network between the two
 TCP peers. It uses ACKs/SACKs to deduce losses and therefore be able to detect
 the effective:
