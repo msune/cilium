@@ -22,40 +22,16 @@ For a packet which is NOT TSO/GSO, and assuming the default value in
 
 ## The effect of TSO/GSO on PMTUD: where is MTU checked?
 
-TBD
+WIP
 
 ## The effect of tunneling
 
+WIP
+
 ### Tunneling GSO offload
+
+WIP
 
 ## Practical example: routing between namespaces
 
-
-
-Assume this diagram:
-
-```
-  .............................     .........................
- ----                  -----  .     .  -----                .
-|eth0|    Default NS  |veth0|---------|veth1|   Namespace X .
- ----                  -----  .     .  -----                .
-  .............................     .........................
-
-```
-
-And assume the following simplified route table:
-
-```
-Default NS:
-----------
-
-10.0.0.0/24 dev veth0 proto kernel scope link src 10.0.0.1 metric 600
-default via 192.168.1.1 dev eth0
-
-NS X:
-----
-
-10.0.0.0/24 dev veth1 proto kernel scope link src 10.0.0.2 metric 600
-default via 10.0.0.1 dev veth1
-```
-
+WIP
