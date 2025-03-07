@@ -1,5 +1,7 @@
 # TCP congestion control and MTU
 
+:warning: this needs to be validated!
+
 TCP congestion control [RFC2581](https://datatracker.ietf.org/doc/html/rfc2581)
 adapts the rate of transmission based on packet loss and round trip times.
 
