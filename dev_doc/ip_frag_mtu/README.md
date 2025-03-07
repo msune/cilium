@@ -47,11 +47,6 @@ however not always reliable. The details have been stubbed [here](pmtud.md).
 In short, In TCP PLPMTUD can send probes (tcp probing), detect losses and adapt
 the MSS. Details [here](plpmtud.md).
 
-### TCP congestion control and MTU
-
-TCP congestion control can interprete MTU losses as congestion. Details
-[here](tcp_congcontrol.md).
-
 ### [Linux] General considerations
 
 Considerations:
