@@ -69,11 +69,17 @@ _disable_gso_tso_ufo:
 _lower_mtu_server_router:
 	@echo "Lowering MTU ONLY on server's (veth1) to 1400"
 	sudo ip netns exec router ip link set mtu 1400 dev veth1
+_block_router_icmp:
+	@echo "Blocking all outgoing ICMP from the router..."
+	@sudo ip netns exec router iptables -I OUTPUT -p icmp -j DROP
 
 router_nogso: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo
 
-router_nogso_icmp_blocked: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo
-	@sudo ip netns exec router iptables -I OUTPUT -p icmp -j DROP
+router_nogso_icmp_blocked: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo _block_router_icmp
+
+router_nogso_icmp_blocked_mtu_probing: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo _block_router_icmp
+	@echo "Enabling TCP MTU probing (TCP PLPMTUD) on the client (tcp_mtu_probing=2)..."
+	@sudo ip netns exec router bash -c "echo 2 > /proc/sys/net/ipv4/tcp_mtu_probing"
 
 router_gso: _create_scenario _lower_mtu_server_router
 
