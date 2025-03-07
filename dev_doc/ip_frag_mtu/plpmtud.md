@@ -81,11 +81,11 @@ Date:   Fri Mar 6 14:57:46 2015 -0500
 :warning: Something is fishy in either the test or the kernel with PLPMTUD :warning:
 
 You can check the [demo](demo/) for seeing how PLPMTUD discovery works. You must
-use the `_nogso_icmp_blocked` variant:
+use the `_nogso_icmp_blocked_mtu_probing` variant:
 
 ```
 cd demo
-make router_nogso_icmp_blocked
+make router_nogso_icmp_blocked_mtu_probing
 ```
 
 The scenario has all veth MTUs set to 1500, except `veth1` that is set to 1400.
