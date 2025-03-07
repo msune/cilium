@@ -24,14 +24,4 @@ maximum TCP MSS will always be upper bound by the effective MTU, yet the current
 MSS can be lower than (PLPMTUD).
 
 
-
-
-For `AF_STREAM` sockets, after a successful `connect()`, processes can `write()`
-into the file descriptor of the socket. Data might be buffered by the kernel.
-
-
-### Socket creation
-
-### Transmitting data
-
-
+TBD
