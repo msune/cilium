@@ -72,6 +72,9 @@ _lower_mtu_server_router:
 
 router_nogso: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo
 
+router_nogso_icmp_blocked: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo
+	@sudo ip netns exec router iptables -I OUTPUT -p icmp -j DROP
+
 router_gso: _create_scenario _lower_mtu_server_router
 
 test_large_icmp_request:
