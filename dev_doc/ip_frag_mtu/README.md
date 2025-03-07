@@ -36,13 +36,20 @@ A quick summary on what happens when packets are exceeding the MTU is stubbed
 
 Please note the specifics about Linux hosts with multiple namespaces.
 
-
 ### Path MTU Discovery (PMTUD). TL;DR it's broken.
 
 In short, PMTUD adjusts the effective MTU for a given destination. It is
 however not always reliable. The details have been stubbed [here](pmtud.md).
 
-## 
+### Packetization Layer Path MTU Discovery (PLPMTUD)
+
+In short, PLPMTUD can send probes, detect losses and adapt the MSS. Details
+[here](plpmtud.md).
+
+### TCP congestion control and MTU
+
+TCP congestion control can interprete MTU losses as congestion.
+Details [here](tcp_congcontrol.md).
 
 ### TCP
 
@@ -85,24 +92,5 @@ it will prepare  using IPT
 
 * UDPow toHow packets are generated (in POSIX sockets)
 
-In theIn POSIX sockets, applications will either op 
-How packets are generated 
-
-### The general 
-
-### What happens IPv4 IP fragmentation: basics
-
-When an IP packet is routed packet is routed
-IP packets whose In genreal 
-
-### Path MTU Discovery (PMTUD)
-
-
-
-## Route MTU
-
-The MMTU is first and an interface property. However, one can define MTU.
-
-This is typically 
 
 
