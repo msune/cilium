@@ -79,7 +79,7 @@ router_nogso_icmp_blocked: _create_scenario _lower_mtu_server_router _disable_gs
 
 router_nogso_icmp_blocked_mtu_probing: _create_scenario _lower_mtu_server_router _disable_gso_tso_ufo _block_router_icmp
 	@echo "Enabling TCP MTU probing (TCP PLPMTUD) on the client (tcp_mtu_probing=2)..."
-	@sudo ip netns exec router bash -c "echo 2 > /proc/sys/net/ipv4/tcp_mtu_probing"
+	@sudo ip netns exec client bash -c "echo 2 > /proc/sys/net/ipv4/tcp_mtu_probing"
 
 router_gso: _create_scenario _lower_mtu_server_router
 

@@ -78,8 +78,6 @@ Date:   Fri Mar 6 14:57:46 2015 -0500
 
 ### PLPMTUD in action
 
-:warning: Something is fishy in either the test or the kernel with PLPMTUD :warning:
-
 You can check the [demo](demo/) for seeing how PLPMTUD discovery works. You must
 use the `_nogso_icmp_blocked_mtu_probing` variant:
 
