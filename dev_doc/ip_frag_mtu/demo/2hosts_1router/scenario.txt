@@ -1,0 +1,22 @@
+Scenario:
+....................       .............................       ....................
+.            ----- . link1 . -----               ----- . link2 . -----            .
+. Host1 NS  |veth0|---------|veth1|  Router NS  |veth2|---------|veth3| Host2 NS  .
+.            ----- .       . -----               ----- .       . -----            .
+....................       .............................       ....................
+
+> Host1 NS route table
+   192.168.0.2/32 local veth0
+   192.168.0.0/24 direct veth0
+   default via 192.168.0.1
+
+> Router NS route table
+   192.168.0.1/32 local veth1
+   192.168.1.1/32 local veth2
+   192.168.0.0/24 direct veth1
+   192.168.1.0/24 direct veth2
+
+> Host2 NS
+   192.168.1.2/32 local veth3
+   192.168.1.0/24 direct veth3
+   default via 192.168.1.1
