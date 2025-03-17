@@ -32,27 +32,35 @@ _create_scenario:
 	@sudo ip netns exec router ip route add 192.168.11.0/24 via 192.168.0.2
 	@sudo ip netns exec router ip route add 192.168.21.0/24 via 192.168.1.2
 
+flush_cache:
+	@sudo ip netns exec router ip route flush cache
+	@sudo ip netns exec host1 ip route flush cache
+	@sudo ip netns exec host2 ip route flush cache
+
 set_link1_default mtus:
 	@echo "Setting link1 MTUs to 1500"
 	@sudo ip netns exec host1  ip link set mtu 1500 dev veth0
 	@sudo ip netns exec router ip link set mtu 1500 dev veth1
+	@$(MAKE) flush_cache
+
 set_link1_mismatched_mtus:
 	@echo "Lowering MTU ONLY on router's (veth1) to 1400, veth0 to 1500"
 	@sudo ip netns exec host1  ip link set mtu 1500 dev veth0
 	@sudo ip netns exec router ip link set mtu 1400 dev veth1
+	@$(MAKE) flush_cache
 set_link1_matching_mtus:
 	@echo "Lowering MTU on link1 on both interfaces to 1400"
 	@sudo ip netns exec host1  ip link set mtu 1400 dev veth0
 	@sudo ip netns exec router ip link set mtu 1400 dev veth1
+	@$(MAKE) flush_cache
 
 _enable_disable_gso_tso_ufo:
 	@sudo ip netns exec router ethtool -K veth1 tso $(OP) gso $(OP) ufo $(OP) || true
 	@sudo ip netns exec router ethtool -K veth2 tso $(OP) gso $(OP) ufo $(OP) || true
 	@sudo ip netns exec host1 ethtool -K veth0 tso $(OP) gso $(OP) ufo $(OP) || true
 	@sudo ip netns exec host2 ethtool -K veth3 tso $(OP) gso $(OP) ufo $(OP) || true
-	@sudo ip netns exec router ip route flush cache
-	@sudo ip netns exec host1 ip route flush cache
-	@sudo ip netns exec host2 ip route flush cache
+	@$(MAKE) flush_cache
+
 enable_gso_tso_ufo:
 	@echo "Enabling GSO/TSO/UFO on all interface..."
 	$(MAKE) _enable_disable_gso_tso_ufo OP=on
@@ -65,19 +73,23 @@ block_icmp:
 	@echo "Blocking all outgoing ICMP from the router..."
 	@sudo ip netns exec router iptables -I OUTPUT -p icmp -j DROP
 	@sudo ip netns exec $(NS) ip route flush cache
+	@$(MAKE) flush_cache
 unblock_icmp_router:
 	@echo "Unblocking all outgoing ICMP from the router..."
 	@sudo ip netns exec router iptables -D OUTPUT -p icmp -j DROP || true
 	@sudo ip netns exec $(NS) ip route flush cache
+	@$(MAKE) flush_cache
 
 enable_mtu_probing:
 	@echo "Enabling TCP MTU probing (TCP PLPMTUD) on host2 (tcp_mtu_probing=2)..."
 	@sudo ip netns exec host2 bash -c "echo 2 > /proc/sys/net/ipv4/tcp_mtu_probing"
 	@sudo ip netns exec $(NS) ip route flush cache
+	@$(MAKE) flush_cache
 disable_mtu_probing:
 	@echo "Disabling TCP MTU probing (TCP PLPMTUD) on host2 (tcp_mtu_probing=0)..."
 	@sudo ip netns exec host2 bash -c "echo 0 > /proc/sys/net/ipv4/tcp_mtu_probing"
 	@sudo ip netns exec $(NS) ip route flush cache
+	@$(MAKE) flush_cache
 
 ## Test
 

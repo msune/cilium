@@ -97,8 +97,8 @@ This is due to GSO.
 
 ### PMTUD: lowering the MTU (symmetrically)
 
-In order to see PMTUD in action, lower the MTU to 1400 on `link1` using
-`set_link1_matching_mtus`. Also disable TSO/
+In order to see [PMTUD](../../pmtud.md) in action, lower the MTU to 1400 on
+`link1` using `set_link1_matching_mtus`. Also disable TSO/
 
 When using `test_large_icmp_request`, host2 will send an ICMP request larger than
 the 1400 MTU. This packet doesn't exceed `link2`'s MTU but does exceed now
@@ -133,7 +133,7 @@ Note that the second fragment has only the remaining bytes, no L4 (ICMP).
 If you now run a second time `test_large_icmp_request` you will see that there
 are no ICMP requests lost, and no PMTUD is triggered. This is because the
 effective MTU towards `192.168.0.2` is cached (you can clean it up running
-`ip route flush cache` in the `host2` NS. 
+`ip route flush cache` in the `host2` NS.
 
 If you now run `test_tcp` you will see no changes.
 
@@ -151,8 +151,104 @@ MTU (1414 bytes packets):
 The rate of transfer should have lowered considerably, as a result of disabling
 GSO.
 
-But why is PMTUD not triggered? You can try `flush_cache` target, and retry
-the ICMP and TCP tests, and you will see that TCP is never triggering PMTUD.
+#### But why is PMTUD not triggered?
 
-####
-Executing the Testing 
+You can try `flush_cache` target, and retry the ICMP and TCP tests, and you will
+see that TCP is never triggering PMTUD.
+
+This is due to the MSS negotiation as part of the TCP 3-way handshake:
+
+```
+17:15:20.288787 fe:80:c3:c1:9e:a9 > ca:a3:c6:88:b9:72, ethertype IPv4 (0x0800), length 74: (tos 0x0, ttl 64, id 14890, offset 0, flags [DF], proto TCP (6), length 60)
+    192.168.1.2.55268 > 192.168.0.2.12345: Flags [S], cksum 0x8283 (incorrect -> 0x9cad), seq 557858077, win 64240, options [mss 1460,sackOK,TS val 2615749544 ecr 0,nop,wscale 7], length 0
+17:15:20.288804 ca:a3:c6:88:b9:72 > fe:80:c3:c1:9e:a9, ethertype IPv4 (0x0800), length 74: (tos 0x0, ttl 63, id 0, offset 0, flags [DF], proto TCP (6), length 60)
+    192.168.0.2.12345 > 192.168.1.2.55268: Flags [S.], cksum 0x8283 (incorrect -> 0x0bdb), seq 3753684576, ack 557858078, win 64704, options [mss 1360,sackOK,TS val 3831766227 ecr 2615749544,nop,wscale 7], length 0
+```
+
+During the negotation, `host1` `veth0`'s has an MTU of 1400, therefore it adjusts
+the MSS it announces to `host1` to `1360` (1360 + 40 bytes of TCP is 1400).
+Without the need of PMTUD, now `host2` that it should not send above the MSS
+announced by the peer.
+
+### Simulating a lower MTU along the path: mismatched MTUs
+
+Generally, two interfaces on the same link are configured to the same MTU.
+However, it's worth noting that the MTU is NOT a property of the link, but of
+the interface, and that (generally) MTU is equivalent to the MRU.
+
+We are going to lower the MTU on the router's side of `link1` to simulate that
+there is somewhere between `host1` and `host2` a constrained MTU (but again,
+this misconfiguration can happen too). Execute `set_link1_mismatched_mtus` which
+will set `veth0`'s MTU to 1500 and leave `veth1` to 1400.
+
+Now, rerun the TCP test:
+
+```
+17:33:49.205296 fe:80:c3:c1:9e:a9 > ca:a3:c6:88:b9:72, ethertype IPv4 (0x0800), length 74: (tos 0x0, ttl 64, id 21552, offset 0, flags [DF], proto TCP (6), length 60)
+    192.168.1.2.45910 > 192.168.0.2.12345: Flags [S], cksum 0x8283 (incorrect -> 0xaf48), seq 2458317316, win 64240, options [mss 1460,sackOK,TS val 2616858460 ecr 0,nop,wscale 7], length 0
+17:33:49.205322 ca:a3:c6:88:b9:72 > fe:80:c3:c1:9e:a9, ethertype IPv4 (0x0800), length 74: (tos 0x0, ttl 63, id 0, offset 0, flags [DF], proto TCP (6), length 60)
+    192.168.0.2.12345 > 192.168.1.2.45910: Flags [S.], cksum 0x8283 (incorrect -> 0xd7ff), seq 2683782827, ack 2458317317, win 65160, options [mss 1460,sackOK,TS val 3832875143 ecr 2616858460,nop,wscale 7], length 0
+```
+
+As you can see, the MSS negotiation is now symmetric at 1460 (MTU 1500). When
+`host2` tries to send a packet that exceeds the 1400 MTU bytes:
+
+```
+17:33:49.205381 fe:80:c3:c1:9e:a9 > ca:a3:c6:88:b9:72, ethertype IPv4 (0x0800), length 1514: (tos 0x0, ttl 64, id 21558, offset 0, flags [DF], proto TCP (6), length 1500)
+    192.168.1.2.45910 > 192.168.0.2.12345: Flags [P.], cksum 0x8823 (incorrect -> 0xe70e), seq 5793:7241, ack 1, win 502, options [nop,nop,TS val 2616858460 ecr 3832875143], length 1448
+17:33:49.205399 ca:a3:c6:88:b9:72 > fe:80:c3:c1:9e:a9, ethertype IPv4 (0x0800), length 590: (tos 0xc0, ttl 64, id 43389, offset 0, flags [none], proto ICMP (1), length 576)
+    192.168.1.1 > 192.168.1.2: ICMP 192.168.0.2 unreachable - need to frag (mtu 1400), length 556
+	(tos 0x0, ttl 64, id 21554, offset 0, flags [DF], proto TCP (6), length 1500)
+    192.168.1.2.45910 > 192.168.0.2.12345: Flags [.], seq 1:1449, ack 1, win 502, options [nop,nop,TS val 2616858460 ecr 3832875143], length 1448
+```
+
+The router is unable to send it via `veth1`, therefore generating an ICMP
+message back. From that point on, the "effective MTU" (PMTUD) is adjusted by
+`host1`, and packets are no longer exceeding the 1400 byte MTU:
+
+```
+17:33:49.205430 fe:80:c3:c1:9e:a9 > ca:a3:c6:88:b9:72, ethertype IPv4 (0x0800), length 1414: (tos 0x0, ttl 64, id 21564, offset 0, flags [DF], proto TCP (6), length 1400)
+    192.168.1.2.45910 > 192.168.0.2.12345: Flags [.], cksum 0x87bf (incorrect -> 0xfe1a), seq 1:1349, ack 1, win 502, options [nop,nop,TS val 2616858460 ecr 3832875143], length 1348
+```
+
+#### TCP MSS clamping
+
+Intermediate routers can tunnel traffic towards other intermediate routers,
+further constraining the MTU (e.g. when tunneling). Generally, PMTUD should
+solve this problem. However, and as discussed [here](../../pmtud.md), PMTUD
+might not always succeed.
+
+Intermediate routers can intercept the TCP SYN and SYN/ACK and further constrain
+the MSS to match the lower MTU. This is called TCP MSS clamping.
+
+In Linux you can do:
+
+```
+sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1300
+```
+
+Which would set the MSS to a fixed number (1300). This is safe but only works for
+TCP.
+
+There is also the option to clamp to the effective discovered MTU with
+`--clamp-mss-to-pmtu`:
+
+```
+sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+```
+
+but note you must be certain that PMTUD works from that intermediate router to
+the destination.
+
+### Simulating blocked ICMP
+
+On this setup, you can now block ICMP on the router using `block_icmp`. No ICMP
+will be sent to neither `host1` nor `host2`. Retesting `test_large_icmp_request`
+and `test_tcp` will show how MTU exceeding packets are lost, and there is no
+chance that ping or the TCP connection is successful.
+
+### Enabling MTU probing (PLPMTUD)
+
+You can enable [MTU probing or PLPMTUD](../../plpmtud.md) using `enable_mtu_probing`
+and you can then see that the TCP connection will be able to succeed. You can
+also see the probing packets sent by the kernel.
