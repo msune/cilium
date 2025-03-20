@@ -75,20 +75,3 @@ Date:   Fri Mar 6 14:57:46 2015 -0500
     Patch3/4: Create a probe timer to detect enlarged path MTU.
     Patch4/4: Update ip-sysctl.txt for new sysctl knobs.
 ```
-
-### PLPMTUD in action
-
-You can check the [demo](demo/) for seeing how PLPMTUD discovery works. You must
-use the `_nogso_icmp_blocked_mtu_probing` variant:
-
-```
-cd demo
-make router_nogso_icmp_blocked_mtu_probing
-```
-
-The scenario has all veth MTUs set to 1500, except `veth1` that is set to 1400.
-
-You can then test:
-
-* ICMP large packets (technically this is not affected by GSO): `test_large_icmp_request`. 
-* TCP large flow: `test_tcp`

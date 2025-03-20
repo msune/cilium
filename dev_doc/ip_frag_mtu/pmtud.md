@@ -134,23 +134,3 @@ Some pointers:
 
 * Calculating effective MSS (`mss_now`) from MTU (and PMTU) [here](https://github.com/torvalds/linux/blob/00a7d39898c8010bfd5ff62af31ca5db34421b38/net/ipv4/tcp_output.c#L1754-L1755). 
 * [tcp_v4_mtu_reduced()](https://github.com/torvalds/linux/blob/00a7d39898c8010bfd5ff62af31ca5db34421b38/net/ipv4/tcp_ipv4.c#L365-L369) as a result of ICMP frag. needed.
-
-### PMTUD in action
-
-You can check the [demo](demo/) for seeing how PMTUD discovery works. You must
-use the `_nogso` variant:
-
-```
-cd demo
-make router_nogso
-```
-
-The scenario has all veth MTUs set to 1500, except `veth1` that is set to 1400.
-
-You can then test:
-
-* ICMP large packets (technically this is not affected by GSO): `test_large_icmp_request`. 
-* TCP large flow: `test_tcp`
-
-You can later use `router_nogso_icmp_blocked` to see how PMTUD is not possible
-when ICMP is blocked.
