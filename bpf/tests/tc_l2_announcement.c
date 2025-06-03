@@ -11,6 +11,7 @@
 #undef QUIET_CT
 
 #include "pktgen.h"
+#include "scapy.h"
 
 /* Enable code paths under test */
 #define ENABLE_IPV4
@@ -44,6 +45,7 @@ static volatile const __u8 mac_bcast[] =   {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 static __always_inline int build_packet(struct __ctx_buff *ctx)
 {
+#if 0
 	struct pktgen builder;
 	volatile const __u8 *src = mac_one;
 	volatile const __u8 *dst = mac_bcast;
@@ -75,7 +77,12 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 
 	/* Calc lengths, set protocol fields and calc checksums */
 	pktgen__finish(&builder);
-
+#else
+	SCAPY_DEF_BUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.0.1", pdst="172.16.10.1"));
+	int rc = scapy_build_pkt(ctx, ARP_REQ);
+	if (rc < 0)
+		return TEST_ERROR;
+#endif
 	return 0;
 }
 
