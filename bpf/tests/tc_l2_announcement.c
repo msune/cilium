@@ -78,10 +78,14 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 	/* Calc lengths, set protocol fields and calc checksums */
 	pktgen__finish(&builder);
 #else
-	SCAPY_DEF_BUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.0.1", pdst="172.16.10.1"));
+	/*SCAPY_DEF_XXBUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.0.1", pdst="172.16.10.1"));
 	int rc = scapy_build_pkt(ctx, ARP_REQ);
-	if (rc < 0)
-		return TEST_ERROR;
+*/
+	struct pktgen builder;
+	pktgen__init(&builder, ctx);
+	SCAPY_DEF_BUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.11.1", pdst="172.16.10.1", hwsrc="DE:AD:BE:EF:DE:EF", hwdst="ff:ff:ff:ff:ff:ff"));
+	SCAPY_PKT_BUILDER(builder, ARP_REQ);
+	pktgen__finish(&builder);
 #endif
 	return 0;
 }
