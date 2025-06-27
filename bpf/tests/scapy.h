@@ -15,4 +15,4 @@
 	} while(0)
 
 
-#include ".scapy_bufs.h"
+#include "scapy/.pkts.h"

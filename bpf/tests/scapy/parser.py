@@ -4,6 +4,7 @@ import sys
 import jinja2
 
 from scapy.all import *
+from pkt_constants import *
 
 # Match SCAPY_BUF(name, ...
 PKT_REGEX = re.compile(
@@ -13,6 +14,7 @@ PKT_REGEX = re.compile(
 
 def find_buf_refs(filepath: str, bufs: dict[str, str]) -> None:
     """Parse one file and extract SCAPY_BUF(name, varargs as single string)."""
+
     try:
         if filepath.endswith("scapy.h"):
             return
@@ -36,6 +38,7 @@ def find_buf_refs(filepath: str, bufs: dict[str, str]) -> None:
                 }
     except Exception as e:
         print(f"[ERROR] Unable to read {filepath}: {e}", file=sys.stderr)
+        raise e
 
 def scan_dir(dir_name: str):
     """Recursively scan .h/.c files and return map of name => flat varargs string."""

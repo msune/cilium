@@ -46,50 +46,13 @@ static volatile const __u8 mac_bcast[] =   {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 static __always_inline int build_packet(struct __ctx_buff *ctx)
 {
-#if 0
-	struct pktgen builder;
-	volatile const __u8 *src = mac_one;
-	volatile const __u8 *dst = mac_bcast;
-	struct ethhdr *l2;
-	struct arphdreth *l3;
-
-	/* Init packet builder */
-	pktgen__init(&builder, ctx);
-
-	/* Push ethernet header */
-	l2 = pktgen__push_ethhdr(&builder);
-
-	if (!l2)
-		return TEST_ERROR;
-
-	ethhdr__set_macs(l2, (__u8 *)src, (__u8 *)dst);
-
-	/* Push ARP header */
-	l3 = pktgen__push_default_arphdr_ethernet(&builder);
-
-	if (!l3)
-		return TEST_ERROR;
-
-	l3->ar_op = bpf_htons(ARPOP_REQUEST);
-	memcpy(l3->ar_sha, (__u8 *)mac_one, ETH_ALEN);
-	l3->ar_sip = v4_ext_one;
-	memcpy(l3->ar_tha, (__u8 *)mac_bcast, ETH_ALEN);
-	l3->ar_tip = v4_svc_one;
-
-	/* Calc lengths, set protocol fields and calc checksums */
-	pktgen__finish(&builder);
-#else
-	/*SCAPY_DEF_XXBUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.0.1", pdst="172.16.10.1"));
-	int rc = scapy_build_pkt(ctx, ARP_REQ);
-*/
 	struct pktgen builder;
 	pktgen__init(&builder, ctx);
-	SCAPY_DEF_BUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.11.1", pdst="172.16.10.1", hwsrc="DE:AD:BE:EF:DE:EF", hwdst="ff:ff:ff:ff:ff:ff"));
+	SCAPY_DEF_BUF(ARP_REQ, Ether(dst=mac_bcast, src=mac_one)/ARP(op="who-has", psrc=v4_ext_one, pdst=v4_svc_one, hwsrc=mac_one, hwdst=mac_bcast));
 	SCAPY_PKT_BUILDER(builder, ARP_REQ);
 	pktgen__finish(&builder);
 
 	hexdump(__FILE__ ": build_packet", ctx);
-#endif
 
 	return 0;
 }
