@@ -88,7 +88,7 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 	SCAPY_PKT_BUILDER(builder, ARP_REQ);
 	pktgen__finish(&builder);
 
-	hexdump(ctx);
+	hexdump(__FILE__ ": build_packet", ctx);
 #endif
 
 	return 0;
@@ -129,6 +129,7 @@ int l2_announcement_arp_no_entry_check(__maybe_unused const struct __ctx_buff *c
 		test_fatal("status code out of bounds");
 
 	status_code = data;
+	hexdump_off(__FILE__ ": no_entry", ctx, sizeof(*status_code));
 
 	/* The program should pass unknown ARP messages to the stack */
 	assert(*status_code == TC_ACT_OK);
@@ -198,6 +199,8 @@ int l2_announcement_arp_happy_path_check(__maybe_unused const struct __ctx_buff 
 		test_fatal("status code out of bounds");
 
 	status_code = data;
+
+	hexdump_off(__FILE__ ": happy_path", ctx, sizeof(*status_code));
 
 	assert(*status_code == TC_ACT_REDIRECT);
 
