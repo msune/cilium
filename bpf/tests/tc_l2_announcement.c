@@ -12,6 +12,7 @@
 
 #include "pktgen.h"
 #include "scapy.h"
+#include "../lib/hexdump.h"
 
 /* Enable code paths under test */
 #define ENABLE_IPV4
@@ -86,7 +87,10 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 	SCAPY_DEF_BUF(ARP_REQ, Ether(dst="ff:ff:ff:ff:ff:ff", src="DE:AD:BE:EF:DE:EF")/ARP(op="who-has", psrc="110.0.11.1", pdst="172.16.10.1", hwsrc="DE:AD:BE:EF:DE:EF", hwdst="ff:ff:ff:ff:ff:ff"));
 	SCAPY_PKT_BUILDER(builder, ARP_REQ);
 	pktgen__finish(&builder);
+
+	hexdump(ctx);
 #endif
+
 	return 0;
 }
 
