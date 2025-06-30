@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "common.h"
+
 #define SCAPY_BUF(NAME) __scapy_buf_##NAME
 #define __SCAPY_BUF_BYTES(NAME) __SCAPY_BUF_##NAME##_BYTES
 #define SCAPY_DEF_BUF(NAME, ...) \
@@ -14,5 +16,24 @@
 			return TEST_ERROR;			 \
 	} while(0)
 
-
+#define SCAPY_ASSERT_PKT_BUF_OFF(CTX, OFF, BUF_NAME, LEN)		\
+	do {								\
+		void *__data = (void *)(long)ctx->data;			\
+		void *__data_end = (void *)(long)ctx->data_end;		\
+		__data += OFF;						\
+		if (__data + LEN > __data_end) {				\
+			test_log("CTX size - offset < LEN " __FILE__ ":" LINE_STRING);	\
+			test_fail_now();				\
+		}							\
+		if (sizeof(SCAPY_BUF(BUF_NAME)) < LEN ) {		\
+			test_log("BUF size < LEN " __FILE__ ":" LINE_STRING); \
+			test_fail_now();				\
+		}							\
+		if (memcmp(__data, & SCAPY_BUF(BUF_NAME), LEN) != 0) {		\
+			test_log("CTX and buffer '" #BUF_NAME "' mismatch " __FILE__ ":" LINE_STRING); \
+			test_fail_now();				\
+		}							\
+	} while(0)
+#define SCAPY_ASSERT_PKT_BUF(CTX, BUF_NAME, LEN) \
+	SCAPY_ASSERT_PKT_BUF_OFF(CTX, 0, BUF_NAME, LEN)
 #include "scapy/.pkts.h"

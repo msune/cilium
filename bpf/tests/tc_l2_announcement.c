@@ -42,7 +42,7 @@ struct {
  *                 +-------------------------------------------------------------------+
  */
 
-static volatile const __u8 mac_bcast[] =   {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+//static volatile const __u8 mac_bcast[] =   {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 static __always_inline int build_packet(struct __ctx_buff *ctx)
 {
@@ -80,8 +80,6 @@ int l2_announcement_arp_no_entry_check(__maybe_unused const struct __ctx_buff *c
 	void *data;
 	void *data_end;
 	__u32 *status_code;
-	struct ethhdr *l2;
-	struct arphdreth *l3;
 
 	test_init();
 
@@ -94,27 +92,12 @@ int l2_announcement_arp_no_entry_check(__maybe_unused const struct __ctx_buff *c
 	status_code = data;
 	hexdump_off(__FILE__ ": no_entry", ctx, sizeof(*status_code));
 
-	/* The program should pass unknown ARP messages to the stack */
 	assert(*status_code == TC_ACT_OK);
 
-	l2 = data + sizeof(__u32);
-	if ((void *)l2 + sizeof(struct ethhdr) > data_end)
-		test_fatal("l2 out of bounds");
-
-	l3 = data + sizeof(__u32) + sizeof(struct ethhdr);
-
-	if ((void *)l3 + sizeof(struct arphdreth) > data_end)
-		test_fatal("l3 out of bounds");
-
-	assert(memcmp(l2->h_source, (__u8 *)mac_one, ETH_ALEN) == 0);
-	assert(memcmp(l2->h_dest, (__u8 *)mac_bcast, ETH_ALEN) == 0);
-	assert(l3->ar_op == bpf_htons(ARPOP_REQUEST));
-	assert(l3->ar_sip == v4_ext_one);
-	assert(l3->ar_tip == v4_svc_one);
-	assert(memcmp(l3->ar_sha, (__u8 *)mac_one, ETH_ALEN) == 0);
-	assert(memcmp(l3->ar_tha, (__u8 *)mac_bcast, ETH_ALEN) == 0);
-
+	SCAPY_DEF_BUF(EXPECTED_ARP_REQ, Ether(dst=mac_bcast, src=mac_one)/ARP(op="who-has", psrc=v4_ext_one, pdst=v4_svc_one, hwsrc=mac_one, hwdst=mac_bcast));
+	SCAPY_ASSERT_PKT_BUF_OFF(ctx, sizeof(__u32), EXPECTED_ARP_REQ, sizeof(SCAPY_BUF(EXPECTED_ARP_REQ)));
 	test_finish();
+
 }
 
 PKTGEN("tc", "1_happy_path")
