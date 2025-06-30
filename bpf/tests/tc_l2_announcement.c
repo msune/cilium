@@ -52,7 +52,7 @@ static __always_inline int build_packet(struct __ctx_buff *ctx)
 	SCAPY_PKT_BUILDER(builder, ARP_REQ);
 	pktgen__finish(&builder);
 
-	hexdump(__FILE__ ": build_packet", ctx);
+	HEXDUMP("build_packet", ctx);
 
 	return 0;
 }
@@ -90,12 +90,15 @@ int l2_announcement_arp_no_entry_check(__maybe_unused const struct __ctx_buff *c
 		test_fatal("status code out of bounds");
 
 	status_code = data;
-	hexdump_off(__FILE__ ": no_entry", ctx, sizeof(*status_code));
+	HEXDUMP_OFF("no_entry", ctx, sizeof(*status_code));
 
 	assert(*status_code == TC_ACT_OK);
 
 	SCAPY_DEF_BUF(EXPECTED_ARP_REQ, Ether(dst=mac_bcast, src=mac_one)/ARP(op="who-has", psrc=v4_ext_one, pdst=v4_svc_one, hwsrc=mac_one, hwdst=mac_bcast));
-	SCAPY_ASSERT_PKT_BUF_OFF(ctx, sizeof(__u32), EXPECTED_ARP_REQ, sizeof(SCAPY_BUF(EXPECTED_ARP_REQ)));
+	SCAPY_ASSERT_PKT_BUF_OFF("arp_req_no_entry_untouched",
+				 ctx, sizeof(__u32),
+				 EXPECTED_ARP_REQ,
+				 sizeof(SCAPY_BUF(EXPECTED_ARP_REQ)));
 	test_finish();
 
 }
@@ -146,7 +149,7 @@ int l2_announcement_arp_happy_path_check(__maybe_unused const struct __ctx_buff 
 
 	status_code = data;
 
-	hexdump_off(__FILE__ ": happy_path", ctx, sizeof(*status_code));
+	HEXDUMP_OFF("happy_path", ctx, sizeof(*status_code));
 
 	assert(*status_code == TC_ACT_REDIRECT);
 

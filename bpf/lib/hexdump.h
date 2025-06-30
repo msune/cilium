@@ -17,7 +17,7 @@
 		})
 
 static __always_inline
-char hexdump_nibble_to_char(__u8 nib)
+char __hexdump_nibble_to_char(__u8 nib)
 {
     return nib < 10 ? (nib + HD_ASCII_NUM0) : (nib - 10 + HD_ASCII_LOWA);
 }
@@ -52,8 +52,8 @@ void hexdump_len_off(const char* msg, const struct __ctx_buff *ctx,
 			break;
 		b = (char *)(data + off + i);
 
-		buf[i*2]     = hexdump_nibble_to_char((*b & 0xF0) >> 4);
-		buf[i*2 + 1] = hexdump_nibble_to_char((*b & 0x0F));
+		buf[i*2]     = __hexdump_nibble_to_char((*b & 0xF0) >> 4);
+		buf[i*2 + 1] = __hexdump_nibble_to_char((*b & 0x0F));
 	}
 
 	buf[2 * i] = '\0';
@@ -64,24 +64,39 @@ void hexdump_len_off(const char* msg, const struct __ctx_buff *ctx,
 * Dumps packet (or up to HD_MAX_BYTES) starting at offset off
 */
 static __always_inline
-void hexdump_off(const char* msg, const struct __ctx_buff *ctx, const __u8 off)
+void hexdump_off(const char* msg, const struct __ctx_buff *ctx,
+		   const __u8 off)
 {
 	hexdump_len_off(msg, ctx, HD_MAX_BYTES, off);
 }
+
 /**
 * Dump first len bytes of packet
 */
 static __always_inline
-void hexdump_len(const char* msg, const struct __ctx_buff *ctx, const __u16 len)
+void hexdump_len(const char* msg, const struct __ctx_buff *ctx,
+		   const __u16 len)
 {
 	hexdump_len_off(msg, ctx, len, 0);
 }
 
 /**
-* Dump all pkt up to HD_MAX_BYTES
+* Dump entire pkt up to HD_MAX_BYTES
 */
 static __always_inline
 void hexdump(const char* msg, const struct __ctx_buff *ctx)
 {
 	hexdump_len_off(msg, ctx, HD_MAX_BYTES, 0);
 }
+
+// Useful MACROs that prepend __FILE__:LINE_STRING
+#define HEXDUMP_LEN_OFF(MSG, CTX, LEN, OFF) \
+	hexdump_len_off( __FILE__ ":" LINE_STRING " " MSG, CTX, LEN, OFF)
+
+#define HEXDUMP_OFF(MSG, CTX, OFF) \
+	hexdump_off( __FILE__ ":" LINE_STRING " " MSG, CTX, OFF)
+
+#define HEXDUMP_LEN(MSG, CTX, LEN) \
+	hexdump_len( __FILE__ ":" LINE_STRING " " MSG, CTX, LEN)
+
+#define HEXDUMP(MSG, CTX) hexdump( __FILE__ ":" LINE_STRING " " MSG, CTX)
