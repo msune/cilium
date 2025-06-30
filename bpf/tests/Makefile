@@ -95,7 +95,7 @@ run: $(TEST_OBJECTS)
 		$(BPF_TEST_FLAGS) \
 	| $(GOTEST_FORMATTER) || STATUS=$$?; \
 	sudo kill -9 $$(cat $(TRACE_PIPE_PID)); rm -f $(TRACE_PIPE_PID); \
-	echo Post processing; \
+	cat $(TRACE_PIPE_LOG) | python3 scapy/trace_diff_pkts.py; \
 	exit $$STATUS
 
 -include $(TEST_OBJECTS:.o=.d)

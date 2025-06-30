@@ -32,8 +32,8 @@
 		}							\
 		if (memcmp(__data, & SCAPY_BUF(BUF_NAME), LEN) != 0) {		\
 			test_log("CTX and buffer '" #BUF_NAME "' mismatch " __FILE__ ":" LINE_STRING); \
-			hexdump_len_off(__FILE__ ":" LINE_STRING " assert '" NAME "' FAILED! Got (ctx): ", ctx, LEN, OFF); 	\
-			scapy_hexdump(__FILE__ ":" LINE_STRING " assert '" NAME "' FAILED! Expected (buf): ", & SCAPY_BUF(BUF_NAME)[0], sizeof(SCAPY_BUF(BUF_NAME))); 	\
+			hexdump_len_off(__FILE__ ":" LINE_STRING " assert '" NAME "' FAILED! Got (ctx)", ctx, LEN, OFF); 	\
+			scapy_hexdump(__FILE__ ":" LINE_STRING " assert '" NAME "' FAILED! Expected (buf)", & SCAPY_BUF(BUF_NAME)[0], sizeof(SCAPY_BUF(BUF_NAME))); 	\
 			test_fail_now();				\
 		}							\
 	} while(0)
