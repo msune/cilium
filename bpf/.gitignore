@@ -4,3 +4,4 @@ compile_commands.json
 *.s
 .rebuild_all
 tests/scapy/.pkts.h
+tests/.trace_pipe.*
