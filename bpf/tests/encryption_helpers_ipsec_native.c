@@ -56,7 +56,7 @@ void set_dst_identity(bool ipv4_inner, bool ipv4_outer, __u32 identity, __u8 spi
 static __always_inline
 int ipsec_redirect_checks(const struct __ctx_buff *ctx, bool ipv4_inner, bool ipv4_outer)
 {
-	test_init();
+	multi_test_init();
 
 	__be16 proto = ctx_get_protocol(ctx);
 	int ret = 0;
@@ -78,13 +78,13 @@ int ipsec_redirect_checks(const struct __ctx_buff *ctx, bool ipv4_inner, bool ip
 		assert(ret == CTX_ACT_REDIRECT);
 	});
 
-	test_finish();
+	multi_test_finish();
 }
 
 static __always_inline
 int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 {
-	test_init();
+	multi_test_init();
 
 	int ret = 0;
 	__be16 proto = is_ipv4 ? bpf_htons(ETH_P_IP) : bpf_htons(ETH_P_IPV6);
@@ -145,7 +145,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		assert(ret == CTX_ACT_OK);
 	});
 
-	test_finish();
+	multi_test_finish();
 }
 
 PKTGEN("tc", "ipsec_redirect4")

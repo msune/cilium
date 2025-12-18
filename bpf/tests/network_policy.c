@@ -35,7 +35,7 @@ check_egress_policy(struct __ctx_buff *ctx, __u32 dst_id, __u8 proto, __be16 dpo
 CHECK("tc", "network_policy_egress_allow")
 int network_policy_egress_allow_check(struct __ctx_buff *ctx)
 {
-	test_init();
+	multi_test_init();
 
 	TEST("deny by default", {
 		int ret;
@@ -275,5 +275,7 @@ int network_policy_egress_allow_check(struct __ctx_buff *ctx)
 			assert(aggregate_for_identity(aggregate_nid_in[i]) == aggregate_nid_out[i]);
 	});
 
-	test_finish();
+	multi_test_finish();
 }
+
+BPF_LICENSE("Dual BSD/GPL");

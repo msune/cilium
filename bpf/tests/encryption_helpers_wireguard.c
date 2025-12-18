@@ -151,3 +151,5 @@ int wireguard_icmpv6_na_skip_check(struct __ctx_buff *ctx)
 
 	test_finish();
 }
+
+BPF_LICENSE("Dual BSD/GPL");

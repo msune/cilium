@@ -11,8 +11,6 @@
 #define __ASSERT_TRACE_FAIL_BUF(...)
 #include "scapy.h"
 
-#define fake_test_end() (void)suite_result; } while (0)
-
 #define ASSERT1 "assert1"
 #define ASSERT2 "assert2"
 
@@ -56,7 +54,7 @@ int force_assert_fail_off(struct __ctx_buff *ctx)
 	ASSERT_CTX_BUF_OFF(ASSERT1_FAIL, "Ether", ctx, 0, sst_rep,
 			   LEN_SST_NOT_EXP);
 
-	fake_test_end();
+	test_finish();
 
 	return TEST_PASS;
 }
@@ -69,7 +67,7 @@ int force_assert_fail_off2(struct __ctx_buff *ctx)
 	ASSERT_CTX_BUF_OFF2(ASSERT2_FAIL, "Ether", ctx, 0, "sst_rep",
 			    sst_rep, LEN_SST_NOT_EXP,
 			    LEN_SST_NOT_EXP);
-	fake_test_end();
+	test_finish();
 
 	return TEST_PASS;
 }
@@ -82,7 +80,7 @@ int force_assert_fail_ctx_smaller_exp(struct __ctx_buff *ctx)
 	ASSERT_CTX_BUF_OFF2(ASSERT3_FAIL, "Ether", ctx, 0, "sst_rep_pad",
 			    sst_rep_pad, LEN_SST_NOT_EXP_PAD,
 			    LEN_SST_NOT_EXP_PAD);
-	fake_test_end();
+	test_finish();
 
 	return TEST_PASS;
 }
