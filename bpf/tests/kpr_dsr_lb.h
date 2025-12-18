@@ -321,7 +321,7 @@ int kpr_v4_dsr_lb1_syn_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -421,7 +421,7 @@ int kpr_v4_dsr_lb1_synack_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -519,7 +519,7 @@ int kpr_v4_dsr_lb2_data_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -619,7 +619,7 @@ int kpr_v4_dsr_lb2_data2_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -720,7 +720,7 @@ int kpr_v6_dsr_lb1_syn_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -819,7 +819,7 @@ int kpr_v6_dsr_lb1_synack_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -916,7 +916,7 @@ int kpr_v6_dsr_lb2_data_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");
@@ -1016,7 +1016,7 @@ int kpr_v6_dsr_lb2_data2_check(__maybe_unused const struct __ctx_buff *ctx)
 	__u32 key = 0;
 
 	if (!tunnel_key_set)
-		test_fatal("no tunnel key set")
+		test_fatal("no tunnel key set");
 	tunnel_key = map_lookup_elem(&tunnel_key_map, &key);
 	if (!tunnel_key)
 		test_fatal("no tunnel key");

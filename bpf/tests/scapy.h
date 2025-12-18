@@ -152,7 +152,7 @@ static struct scapy_assert __scapy_null_assert = {0};
 
 #ifndef __ASSERT_TRACE_FAIL_BUF
 #define __ASSERT_TRACE_FAIL_BUF(BUF_NAME)				\
-	test_log("CTX and buffer '" BUF_NAME "' content mismatch ")
+	test_log("CTX and buffer '" BUF_NAME "' content mismatch ");
 #endif /* __ASSERT_TRACE_FAIL_BUF */
 
 #define __SCAPY_GET_CTX_LEN(__DATA, __DATA_END) \

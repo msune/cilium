@@ -269,9 +269,9 @@ int tc_redirect_host_ipv4_check(__maybe_unused const struct __ctx_buff *ctx)
 	if (num_calls[RECORD_TAILCALL] != expected[RECORD_TAILCALL])
 		test_fatal(TEST_DRIVER_NAME ": Incorrect number of tail calls");
 	if (num_calls[RECORD_REDIRECT] != expected[RECORD_REDIRECT])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls");
 	if (num_calls[RECORD_REDIRECT_PEER] != expected[RECORD_REDIRECT_PEER])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect nunmber of bpf_redirect_peer() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect nunmber of bpf_redirect_peer() calls");
 
 	/* Check the packet. */
 	ASSERT_CTX_BUF_OFF("tc_redirect_host_ipv4_post",
@@ -383,9 +383,9 @@ int tc_redirect_host_ipv6_check(__maybe_unused const struct __ctx_buff *ctx)
 	if (num_calls[RECORD_TAILCALL] != expected[RECORD_TAILCALL])
 		test_fatal(TEST_DRIVER_NAME ": Incorrect number of tail calls");
 	if (num_calls[RECORD_REDIRECT] != expected[RECORD_REDIRECT])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls");
 	if (num_calls[RECORD_REDIRECT_PEER] != expected[RECORD_REDIRECT_PEER])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect nunmber of bpf_redirect_peer() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect nunmber of bpf_redirect_peer() calls");
 
 	/* Check the packet. */
 	ASSERT_CTX_BUF_OFF("tc_redirect_host_ipv6_post",

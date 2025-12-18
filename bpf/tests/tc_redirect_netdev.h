@@ -254,9 +254,9 @@ int tc_redirect_netdev_ipv4_check(__maybe_unused const struct __ctx_buff *ctx)
 	if (num_calls[RECORD_TAILCALL] != expected[RECORD_TAILCALL])
 		test_fatal(TEST_DRIVER_NAME ": Incorrect number of tail calls");
 	if (num_calls[RECORD_REDIRECT] != expected[RECORD_REDIRECT])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls");
 	if (num_calls[RECORD_REDIRECT_PEER] != expected[RECORD_REDIRECT_PEER])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect_peer() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect_peer() calls");
 
 	test_finish();
 }
@@ -344,9 +344,9 @@ int tc_redirect_pod_egress_ipv4_check(__maybe_unused const struct __ctx_buff *ct
 	if (num_calls[RECORD_TAILCALL] != expected[RECORD_TAILCALL])
 		test_fatal(TEST_DRIVER_NAME ": pod bad tail count");
 	if (num_calls[RECORD_REDIRECT] != expected[RECORD_REDIRECT])
-		test_fatal(TEST_DRIVER_NAME ": pod bad redirect count")
+		test_fatal(TEST_DRIVER_NAME ": pod bad redirect count");
 	if (num_calls[RECORD_REDIRECT_PEER] != expected[RECORD_REDIRECT_PEER])
-		test_fatal(TEST_DRIVER_NAME ": pod bad redirect_peer count")
+		test_fatal(TEST_DRIVER_NAME ": pod bad redirect_peer count");
 
 	test_finish();
 }
@@ -424,9 +424,9 @@ int tc_redirect_netdev_ipv6_check(__maybe_unused const struct __ctx_buff *ctx)
 	if (num_calls[RECORD_TAILCALL] != expected[RECORD_TAILCALL])
 		test_fatal(TEST_DRIVER_NAME ": Incorrect number of tail calls");
 	if (num_calls[RECORD_REDIRECT] != expected[RECORD_REDIRECT])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect() calls");
 	if (num_calls[RECORD_REDIRECT_PEER] != expected[RECORD_REDIRECT_PEER])
-		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect_peer() calls")
+		test_fatal(TEST_DRIVER_NAME ": Incorrect number of bpf_redirect_peer() calls");
 
 	test_finish();
 }
@@ -496,9 +496,9 @@ int tc_redirect_pod_egress_ipv6_check(__maybe_unused const struct __ctx_buff *ct
 	if (num_calls[RECORD_TAILCALL] != expected[RECORD_TAILCALL])
 		test_fatal(TEST_DRIVER_NAME ": pod bad tail count");
 	if (num_calls[RECORD_REDIRECT] != expected[RECORD_REDIRECT])
-		test_fatal(TEST_DRIVER_NAME ": pod bad redirect count")
+		test_fatal(TEST_DRIVER_NAME ": pod bad redirect count");
 	if (num_calls[RECORD_REDIRECT_PEER] != expected[RECORD_REDIRECT_PEER])
-		test_fatal(TEST_DRIVER_NAME ": pod bad redirect_peer count")
+		test_fatal(TEST_DRIVER_NAME ": pod bad redirect_peer count");
 
 	test_finish();
 }

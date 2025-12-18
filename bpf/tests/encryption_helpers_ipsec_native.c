@@ -98,7 +98,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		set_dst_identity(is_ipv4, true, DST_IDENTITY, TARGET_SPI);
 		ret = ipsec_maybe_redirect_to_encrypt(ctx, proto, HOST_ID);
 		assert(ret == CTX_ACT_OK);
-	})
+	});
 
 	/*
 	 * Ensure world-to-pod traffic is not encrypted.
@@ -107,7 +107,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		set_dst_identity(is_ipv4, true, DST_IDENTITY, TARGET_SPI);
 		ret = ipsec_maybe_redirect_to_encrypt(ctx, proto, WORLD_ID);
 		assert(ret == CTX_ACT_OK);
-	})
+	});
 
 	/*
 	 * Ensure remote_node-to-pod traffic is not encrypted.
@@ -116,7 +116,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		set_dst_identity(is_ipv4, true, DST_IDENTITY, TARGET_SPI);
 		ret = ipsec_maybe_redirect_to_encrypt(ctx, proto, REMOTE_NODE_ID);
 		assert(ret == CTX_ACT_OK);
-	})
+	});
 
 	/*
 	 * Ensure pod-to-host traffic is not encrypted.
@@ -125,7 +125,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		set_dst_identity(is_ipv4, true, HOST_ID, 0);
 		ret = ipsec_maybe_redirect_to_encrypt(ctx, proto, SOURCE_IDENTITY);
 		assert(ret == CTX_ACT_OK);
-	})
+	});
 
 	/*
 	 * Ensure pod-to-world traffic is not encrypted.
@@ -134,7 +134,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		set_dst_identity(is_ipv4, true, WORLD_ID, 0);
 		ret = ipsec_maybe_redirect_to_encrypt(ctx, proto, SOURCE_IDENTITY);
 		assert(ret == CTX_ACT_OK);
-	})
+	});
 
 	/*
 	 * Ensure pod-to-remote_node traffic is not encrypted.
@@ -143,7 +143,7 @@ int bad_identities_check(struct __ctx_buff *ctx, bool is_ipv4)
 		set_dst_identity(is_ipv4, true, REMOTE_NODE_ID, 0);
 		ret = ipsec_maybe_redirect_to_encrypt(ctx, proto, SOURCE_IDENTITY);
 		assert(ret == CTX_ACT_OK);
-	})
+	});
 
 	test_finish();
 }

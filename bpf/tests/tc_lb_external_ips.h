@@ -154,7 +154,7 @@ int lb4_external_ips_check(__maybe_unused const struct __ctx_buff *ctx)
 	data_end = ctx_data_end(ctx);
 	status_code = data;
 
-	assert(data + sizeof(__u32) <= data_end)
+	assert(data + sizeof(__u32) <= data_end);
 
 #ifdef NORTH_SOUTH_TEST
 	/* Ensure packet is accepted. */
@@ -249,7 +249,7 @@ int lb6_external_ips_check(__maybe_unused const struct __ctx_buff *ctx)
 	data_end = ctx_data_end(ctx);
 	status_code = data;
 
-	assert(data + sizeof(__u32) <= data_end)
+	assert(data + sizeof(__u32) <= data_end);
 
 #ifdef NORTH_SOUTH_TEST
 	/* Ensure packet is accepted. */
