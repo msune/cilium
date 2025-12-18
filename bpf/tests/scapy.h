@@ -203,7 +203,11 @@ bool __assert_map_add_failure(const char *name, const __u8 name_len,
 
 #define __ASSERT_CTX_BUF_OFF(NAME, FIRST_LAYER, CTX, OFF, BUF_NAME, _BUF,		\
 			    _BUF_LEN, LEN)						\
-	do {										\
+	{										\
+		{									\
+			__get_curr_test();						\
+			__curr_test->n_asserts++;					\
+		}									\
 		void *__DATA = (void *)(long)(CTX)->data;				\
 		void *__DATA_END = (void *)(long)(CTX)->data_end;			\
 		__DATA += OFF;								\
@@ -234,7 +238,7 @@ bool __assert_map_add_failure(const char *name, const __u8 name_len,
 			++scapy_assert_map_cnt;						\
 			test_fail_now();						\
 		}									\
-	} while (0)
+	} do {} while (0)
 
 /**
  * Compare a packet (ctx) to a scapy buffer(BUF_NAME) starting from ctx's OFF
