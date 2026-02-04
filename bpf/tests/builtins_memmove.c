@@ -132,3 +132,5 @@ int test_builtin_memmove2(__maybe_unused struct __ctx_buff *ctx)
 
 	test_finish();
 }
+
+BPF_LICENSE("Dual BSD/GPL");
