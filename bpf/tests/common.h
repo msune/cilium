@@ -48,13 +48,23 @@ struct {
 	__uint(value_size, sizeof(struct suite_test_result));
 	__uint(pinning, LIBBPF_PIN_BY_NAME);
 	__uint(max_entries, 32);
-} suite_result_map2 __section_maps_btf;
+} suite_result_map __section_maps_btf;
 
-#define __get_curr_test()						\
-	struct suite_test_result *__curr_test;				\
-	__curr_test = map_lookup_elem(&suite_result_map2,		\
-				      &__suite_test_cnt);		\
-	if (!__curr_test) return TEST_FAIL
+struct suite_test_result __curr_test_;
+
+void __test_memcpy(const void *dst, const void *src, const __u32 len)
+{
+	__u32 i;
+
+	for (i = 0; i + 8 <= len; i += 8)
+		*(__u64 *)(dst + i) = *(__u64 *)(src + i);
+
+	for (; i < len; i++)
+		*(__u8 *)(dst + i) = *(__u8 *)(src + i);
+}
+
+#define __get_curr_test() \
+	struct suite_test_result *__curr_test = &__curr_test_
 
 #define __test_log(fmt, args...)					\
 	if (__curr_test->n_logs < TEST_MAX_LOG_ENTRIES) {		\
@@ -151,14 +161,20 @@ do {							\
 	__curr_test->result = TEST_PASS;		\
 	} do {} while (0)
 
-#define __test_finish()						\
-} while (0);							\
-	{							\
-		__get_curr_test();				\
-		__suite_test_cnt++;				\
-		__curr_test->valid = true;			\
-		if (__curr_test->result != TEST_PASS)		\
-			__suite_result = __curr_test->result;	\
+#define __test_finish()							\
+} while (0);								\
+	{								\
+		struct suite_test_result *__test;			\
+		__get_curr_test();					\
+		__test = map_lookup_elem(&suite_result_map,		\
+					 &__suite_test_cnt); 		\
+		if (!__test) return TEST_FAIL;				\
+		__test_memcpy(__test, __curr_test, sizeof(*__test));	\
+		__test->valid = true;					\
+		__suite_test_cnt++;					\
+		__test->valid = true;					\
+		if (__test->result != TEST_PASS)			\
+			__suite_result = __test->result;		\
 	} do {} while (0)
 
 #define multi_test_init()			\
