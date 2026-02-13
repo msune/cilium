@@ -86,10 +86,20 @@ if __name__ == "__main__":
 * This is an auto-generated header containing byte arrays of the scapy
 * buffer definitions.
 */
+{% for name, val in cMacros.items() -%}
+{%- if val["comment"] -%}
+/* {{ val["comment"] }} */
+{%- endif -%}
+{%- if val["quoted"] -%}
+#define {{ name }} "{{ val["value"] }}"
+{%- else -%}
+#define {{ name }} {{ val["value"] }}
+{% endif -%}
+{% endfor %}
 
 {% for name, packet in bufs.items() -%}
 #define __SCAPY_BUF_{{ name }}_BYTES {{"{"}}{{ bufs[name]["bytes"]|join(', ') -}}{{"}"}}
 {% endfor %}
     """
-    s = jinja2.Template(template).render(bufs=bufs)
+    s = jinja2.Template(template).render(bufs=bufs, cMacros=cMacros)
     print(s)

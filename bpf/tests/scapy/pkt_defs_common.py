@@ -3,6 +3,27 @@
 
 from scapy.all import *
 
+cMacros = dict()
+
+def __C_MacroAdd(name: str, value: str, comment: str, quoted: bool) -> None:
+    if name in cMacros:
+        if cMacros[name]["value"] != value:
+            raise Exception(f"MACRO '{name}' already defined with a different value '{cMacros[name]['value']}'")
+        if cMacros[name]["quoted"] != quoted:
+            raise Exception(f"MACRO '{name}' already defined with a different quoting type.")
+
+    cMacros[name] = {
+        "value": value,
+        "quoted": quoted,
+        "comment": comment
+    }
+
+def C_Macro(name: str, value: str, comment: str = None) -> None:
+    __C_MacroAdd(name, value, comment, True)
+
+def C_MacroUnquoted(name: str, value: str, comment: str = None) -> None:
+    __C_MacroAdd(name, value, comment, False)
+
 # Note: these replicate pktgen.h values
 # TODO: it would be ideal to have a single source of truth for these values
 
