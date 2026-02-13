@@ -27,3 +27,5 @@ sst_rep_pad = (
 )
 
 assert len(bytes(sst_rep_pad)) == (len(bytes(sst_rep)) + 8)
+
+C_Macro("test", "one")
